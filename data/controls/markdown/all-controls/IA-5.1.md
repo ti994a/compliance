@@ -1,0 +1,23 @@
+# IA-5.1: Password-based Authentication
+
+**Family:** Identification and Authentication  
+**Class:** SP800-53-enhancement  
+**Keywords:** Assessment, assessment plan, assurance, availability, computer security, confidentiality, control, control assessment, cybersecurity, FISMA, information security, information system, integrity, personally identifiable information, OSCAL, Open Security Controls Assessment Language, Privacy Act, privacy controls, privacy functions, privacy requirements, Risk Management Framework, security controls, security functions, security requirements, system, system security
+
+## Control Statement
+For password-based authentication: Maintain a list of commonly-used, expected, or compromised passwords and update the list the frequency at which to update the list of commonly used, expected, or compromised passwords is defined; and when organizational passwords are suspected to have been compromised directly or indirectly; Verify, when users create or update passwords, that the passwords are not found on the list of commonly-used, expected, or compromised passwords in IA-5(1)(a); Transmit passwords only over cryptographically-protected channels; Store passwords using an approved salted key derivation function, preferably using a keyed hash; Require immediate selection of a new password upon account recovery; Allow user selection of long passwords and passphrases, including spaces and all printable characters; Employ automated tools to assist the user in selecting strong password authenticators; and Enforce the following composition and complexity rules: authenticator composition and complexity rules are defined;.
+
+## Implementation Guidance
+Password-based authentication applies to passwords regardless of whether they are used in single-factor or multi-factor authentication. Long passwords or passphrases are preferable over shorter passwords. Enforced composition rules provide marginal security benefits while decreasing usability. However, organizations may choose to establish certain rules for password generation (e.g., minimum character length for long passwords) under certain circumstances and can enforce this requirement in IA-5(1)(h). Account recovery can occur, for example, in situations when a password is forgotten. Cryptographically protected passwords include salted one-way cryptographic hashes of passwords. The list of commonly used, compromised, or expected passwords includes passwords obtained from previous breach corpuses, dictionary words, and repetitive or sequential characters. The list includes context-specific words, such as the name of the service, username, and derivatives thereof.
+
+## Assessment Objectives
+for password-based authentication, a list of commonly used, expected, or compromised passwords is maintained and updated the frequency at which to update the list of commonly used, expected, or compromised passwords is defined; and when organizational passwords are suspected to have been compromised directly or indirectly; for password-based authentication when passwords are created or updated by users, the passwords are verified not to be found on the list of commonly used, expected, or compromised passwords in IA-05(01)(a); for password-based authentication, passwords are only transmitted over cryptographically protected channels; for password-based authentication, passwords are stored using an approved salted key derivation function, preferably using a keyed hash; for password-based authentication, immediate selection of a new password is required upon account recovery; for password-based authentication, user selection of long passwords and passphrases is allowed, including spaces and all printable characters; for password-based authentication, automated tools are employed to assist the user in selecting strong password authenticators; for password-based authentication, authenticator composition and complexity rules are defined; are enforced.
+
+## Assessment Methods
+Identification and authentication policy  password policy  procedures addressing authenticator management  system security plan  system design documentation  system configuration settings and associated documentation  password configurations and associated documentation  other relevant documents or records Organizational personnel with authenticator management responsibilities  organizational personnel with information security responsibilities  system/network administrators  system developers Mechanisms supporting and/or implementing password-based authenticator management capability
+
+## Related Controls
+- ia-6
+
+---
+*NIST SP 800-53 Rev 5 Control*
