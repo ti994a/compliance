@@ -14,6 +14,18 @@ def compliance_calculator(expression: str) -> str:
         'weeks': 604800, 'week': 604800,
         'months': 2592000, 'month': 2592000,
         'years': 31536000, 'year': 31536000,
+        'quarterly': 7776000,  # 90 days
+        'annually': 31536000,  # 365 days  
+        'yearly': 31536000,    # 365 days
+        'biweekly': 1209600,   # 14 days
+        'weekly': 604800,      # 7 days
+        'daily': 86400,        # 1 day
+        'continuous': 0,  # Special case for always-on
+        'real_time': 1,   # 1 second
+        'immediate': 1,   # 1 second
+        'monthly': 2592000,  # 30 days
+        'semiannually': 15768000,  # 182.5 days
+        'biennially': 63072000,  # 2 years
         
         # Money (to dollars)
         'cents': 0.01, 'cent': 0.01,
@@ -27,7 +39,16 @@ def compliance_calculator(expression: str) -> str:
         'kb': 1024, 'mb': 1048576, 'gb': 1073741824, 'tb': 1099511627776,
         
         # Percentages
-        '%': 0.01, 'percent': 0.01, 'percentage': 0.01
+        '%': 0.01, 'percent': 0.01, 'percentage': 0.01,
+
+        # Security/Compliance specific units
+        'business_days': 86400,  # 1 day (business day = calendar day for calculations)
+        'working_days': 86400,   # 1 day
+        'calendar_days': 86400,  # 1 day
+        
+        # Network/Performance units  
+        'bps': 1, 'bits_per_second': 1,
+        'kbps': 1000, 'mbps': 1000000, 'gbps': 1000000000,
     }
     
     def parse_value(text):
