@@ -16,6 +16,47 @@ NIST SP 800-53 Controls → Organizational Policies → Test Scenarios → LLM E
 
 ## Workflow Components
 
+## Field
+
+scenario-id: Unique identifier for each test scenario (e.g., "scenario-id-1")
+
+scenario-detail: Detailed narrative describing a fictional organization's compliance situation, including specific technical implementations, timeframes, and policy adherence details
+
+is-compliant: Ground truth boolean - whether the scenario actually complies with referenced NIST policies (true/false)
+
+non-compliant-reason: Human-authored explanation of why the scenario violates policies (empty string if compliant)
+
+judged-compliant: LLM's assessment of compliance (true/false) - the model's prediction
+
+judged-compliant-reason: LLM's detailed reasoning for its compliance judgment
+
+llm-judge-input-tokens: Number of tokens sent to the LLM for evaluation
+
+llm-judge-output-tokens: Number of tokens in the LLM's response
+
+llm-judge-total-tokens: Sum of input and output tokens (cost calculation)
+
+judged-dtm: Timestamp when the LLM evaluation was performed
+
+llm-judge: Model identifier used for evaluation (e.g., "us.amazon.nova-premier-v1:0")
+
+llm-judge-temp: Temperature setting used during LLM evaluation (0.0 or 0.1)
+
+Overall Intent
+This is a NIST compliance evaluation benchmark designed to:
+
+Test LLM accuracy on complex regulatory compliance scenarios
+
+Compare model performance across different LLMs (Claude variants, Nova Premier, Nova 2 Lite)
+
+Measure cost-effectiveness by tracking token usage for price/performance analysis
+
+Evaluate reasoning quality through detailed explanations from each model
+
+Assess scenario complexity impact by varying the number of policies referenced (4, 6, 8, 10 policies per scenario)
+
+The system generates realistic organizational scenarios that either comply with or violate NIST SP 800-53 security controls, then tests whether LLMs can correctly identify compliance status and provide accurate reasoning - essentially automating compliance auditing tasks.
+
 ### 0. Generate Controls (`0-GenerateControls.ipynb`)
 **Purpose**: Extract and process NIST SP 800-53 security controls
 - Uses NIST Open Security Controls Assessment Language (OSCAL) JSON control file as source (https://pages.nist.gov/OSCAL-Reference/models/v1.1.0/complete/json-reference/)
