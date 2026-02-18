@@ -4,317 +4,493 @@ A comprehensive system for evaluating Large Language Model (LLM) performance on 
 
 ## Overview
 
-This project implements an end-to-end pipeline that transforms NIST cybersecurity controls into realistic compliance scenarios, then evaluates various LLMs' ability to correctly assess compliance. The goal is to provide data-driven insights into which models offer the best price/performance ratio for compliance automation tasks.
+This project implements an end-to-end pipeline that transforms NIST cybersecurity controls into realistic compliance scenarios, then evaluates various LLMs' ability to correctly assess compliance. It provides data-driven insights into which models offer the best price/performance ratio for compliance automation tasks.
 
-## System Architecture
+Goals:
+
+ - Test LLM accuracy on complex regulatory compliance scenarios
+
+ - Compare model performance across different LLMs (Claude variants, Nova Premier, Nova 2 Lite)
+
+ - Support cost-effectiveness by tracking token usage for price/performance analysis
+
+ - Evaluate reasoning quality through detailed explanations from each model
+
+ - Assess scenario complexity impact by varying the number of policies referenced (4, 6, 8, 10 policies per scenario)
+
+
+## Pipeline Flow
 
 ```
-NIST SP 800-53 Controls → Organizational Policies → Test Scenarios → LLM Evaluation
-       ↓                        ↓                    ↓               ↓
-  [Notebook 0]            [Notebook 1]         [Notebook 2]    [Notebook 3]
+    ┌──────────────┐      ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+    │   STEP 1     │      │   STEP 2     │      │   STEP 3     │      │   STEP 4     │
+    │   Generate   │ ───▶ │   Generate   │ ───▶ │   Generate   │ ───▶ │    Judge     │
+    │   Controls   │      │   Policies   │      │   Scenarios  │      │   Scenarios  │
+    └──────────────┘      └──────────────┘      └──────────────┘      └──────────────┘
+          │                     │                     │                     │
+          ▼                     ▼                     ▼                     ▼
+    ┌──────────────┐      ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+    │ NIST Catalog │      │  Bedrock LLM │      │  Bedrock LLM │      │ Multi-Model  │
+    │    (JSON)    │      │  (Claude/Nova)│      │  (Scenario   │      │  Evaluation  │
+    │      ↓       │      │      ↓       │      │   Generator) │      │  + Metrics   │
+    │ JSONL + MD   │      │ Policy MD    │      │      ↓       │      │      ↓       │
+    │   Files      │      │   Files      │      │ 1,000 JSONL  │      │ Accuracy +   │
+    └──────────────┘      └──────────────┘      │  Scenarios   │      │ Token Costs  │
+                                               └──────────────┘      └──────────────┘
+                                                                            │
+                                                                            ▼
+                                                                    ┌──────────────┐
+                                                                    │   OUTPUTS    │
+                                                                    │ • Accuracy % │
+                                                                    │ • Cost/Query │
+                                                                    │ • Latency    │
+                                                                    │ • Error Types│
+                                                                    └──────────────┘
+
 ```
 
-## Workflow Components
+## Processing Steps
 
-## Field
+## Step 1: Generate Controls
 
-scenario-id: Unique identifier for each test scenario (e.g., "scenario-id-1")
+Purpose: Transform NIST SP 800-53 Rev 5 catalog into machine-readable formats
+- Parses official NIST OSCAL JSON catalog from S3
+- Substitutes organization-defined parameters with concrete values using regex replacement
+- Filters withdrawn controls to exclude obsolete requirements
+- Outputs JSONL (one control per line) and markdown files organized by control family
+- Extracts statement, guidance, assessment objectives, and related controls for each control
 
-scenario-detail: Detailed narrative describing a fictional organization's compliance situation, including specific technical implementations, timeframes, and policy adherence details
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                           STEP 1 EXECUTION FLOW                                      │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                      │
+│  main()                                                                              │
+│    │                                                                                 │
+│    ├─▶ 1. DOWNLOAD SOURCE CATALOG                                                   │
+│    │       └─▶ download_file()                                                      │
+│    │           └─▶ S3 → Local: NIST_SP-800-53_rev5_catalog.json                    │
+│    │                                                                                 │
+│    ├─▶ 2. PARSE JSON & EXTRACT METADATA                                             │
+│    │       └─▶ Load JSON, extract catalog-level keywords                           │
+│    │                                                                                 │
+│    ├─▶ 3. COLLECT ALL CONTROLS                                                      │
+│    │       └─▶ Iterate groups → controls → enhancements                            │
+│    │       └─▶ Build (control, family) tuple list                                  │
+│    │                                                                                 │
+│    ├─▶ 4. PROCESS EACH CONTROL                                                      │
+│    │       │                                                                         │
+│    │       ├─▶ 4a. Filter withdrawn controls                                        │
+│    │       │                                                                         │
+│    │       ├─▶ 4b. extract_param_guidelines()                                       │
+│    │       │       └─▶ Build parameter substitution map                            │
+│    │       │                                                                         │
+│    │       ├─▶ 4c. collect_text_from_parts() × 4                                   │
+│    │       │       └─▶ Extract: statement, guidance, assessment-objective,         │
+│    │       │           assessment-method                                            │
+│    │       │                                                                         │
+│    │       ├─▶ 4d. substitute_parameters() × 4                                      │
+│    │       │       └─▶ Replace {{ insert: param, X }} placeholders                 │
+│    │       │                                                                         │
+│    │       └─▶ 4e. Write control object to JSONL                                   │
+│    │                                                                                 │
+│    ├─▶ 5. UPLOAD JSONL TO S3                                                        │
+│    │       └─▶ upload_file()                                                        │
+│    │                                                                                 │
+│    ├─▶ 6. CREATE MARKDOWN FILES                                                     │
+│    │       └─▶ create_markdown_files()                                             │
+│    │           └─▶ Generate by-family/ and all-controls/ structures                │
+│    │                                                                                 │
+│    ├─▶ 7. DISPLAY DIRECTORY TREE                                                    │
+│    │       └─▶ print_directory_tree()                                              │
+│    │                                                                                 │
+│    └─▶ 8. UPLOAD MARKDOWN TO S3                                                     │
+│            └─▶ upload_directory_to_s3()                                            │
+│                └─▶ Recursive upload maintaining structure                          │
+│                                                                                      │
+└─────────────────────────────────────────────────────────────────────────────────────┘
 
-is-compliant: Ground truth boolean - whether the scenario actually complies with referenced NIST policies (true/false)
+```
 
-non-compliant-reason: Human-authored explanation of why the scenario violates policies (empty string if compliant)
+* NIST Open Security Controls Assessment Language (OSCAL) JSON control file as source (https://pages.nist.gov/OSCAL-Reference/models/v1.1.0/complete/json-reference/)
 
-judged-compliant: LLM's assessment of compliance (true/false) - the model's prediction
+---
 
-judged-compliant-reason: LLM's detailed reasoning for its compliance judgment
+### Step 2: Generate Policies
 
-llm-judge-input-tokens: Number of tokens sent to the LLM for evaluation
+Purpose: Convert technical NIST controls into organizational policy documents
+- Reads control markdown files from Step 1 output
+- Invokes Bedrock LLM (Claude or Nova) with structured prompt template
+- Generates RAG-optimized policies with validation logic, scenario patterns, and compliance mapping
+- Creates versioned output folders with timestamp and model ID for experiment tracking
+- Supports resume capability via start_with_control parameter for interrupted runs
+  
 
-llm-judge-output-tokens: Number of tokens in the LLM's response
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    STEP 2 PROCESSING FLOW                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1. INITIALIZE OUTPUT DIRECTORIES                               │
+│     └─▶ Create versioned subfolders with timestamp and model ID│
+│         • Format: {YYYY-MM-DD:HH:MM:SSET}_{model_id}           │
+│         • Creates both all-controls/ and by-family/ versions   │
+│                                                                 │
+│  2. TRAVERSE CONTROL FILES                                      │
+│     └─▶ Walk through control markdown directory tree           │
+│     └─▶ Process each .md file in by-family/ structure          │
+│                                                                 │
+│  3. FILTER CONTROLS (Optional Resume)                           │
+│     └─▶ If start_with_control specified:                       │
+│         • Parse control IDs using control_key() function       │
+│         • Skip controls that sort before the start control     │
+│         • Enables resuming interrupted processing              │
+│                                                                 │
+│  4. GENERATE POLICIES                                           │
+│     └─▶ For each control file:                                 │
+│         a. Read control markdown content                       │
+│         b. Format prompt using PROMPT_TEMPLATE                 │
+│         c. Call invoke_bedrock_model() with configured model   │
+│         d. Extract policy markdown from response               │
+│                                                                 │
+│  5. WRITE POLICY FILES                                          │
+│     └─▶ Save to BOTH output locations:                         │
+│         • all-controls/{family}/policy_{control_name}.md       │
+│         • by-family/{family}/policy_{control_name}.md          │
+│     └─▶ Maintain original directory structure                  │
+│     └─▶ Prefix output files with "policy_"                     │
+│                                                                 │
+│  6. UPLOAD TO S3                                                │
+│     └─▶ Call upload_directory_to_s3() separately               │
+│     └─▶ Recursively upload maintaining directory structure     │
+│     └─▶ Target: s3://{bucket}/policies/markdown/               │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 
-llm-judge-total-tokens: Sum of input and output tokens (cost calculation)
+```
 
-judged-dtm: Timestamp when the LLM evaluation was performed
+---
 
-llm-judge: Model identifier used for evaluation (e.g., "us.amazon.nova-premier-v1:0")
+### Step 3: Generate Scenarios
 
-llm-judge-temp: Temperature setting used during LLM evaluation (0.0 or 0.1)
+Purpose: Create labeled test corpus for LLM evaluation
+- Randomly selects 10 policies per scenario from S3 policy repository
+- Generates 1,000 scenarios (500 compliant, 500 non-compliant) using alternating batch approach
+- Enforces JSON schema via Bedrock tool use to ensure consistent output structure
+- Includes compliance_calculator tool for accurate numerical threshold comparisons
+- Saves batch checkpoints after each generation for crash recovery
 
-Overall Intent
-This is a NIST compliance evaluation benchmark designed to:
 
-Test LLM accuracy on complex regulatory compliance scenarios
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                           STEP 3 EXECUTION FLOW                                      │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                      │
+│  main()                                                                              │
+│    │                                                                                 │
+│    ├─▶ 1. CREATE OUTPUT DIRECTORY                                                   │
+│    │       └─▶ FOLDER_SCENARIOS.mkdir(parents=True, exist_ok=True)                 │
+│    │                                                                                 │
+│    ├─▶ 2. START KEEP-ALIVE THREAD                                                   │
+│    │       └─▶ threading.Thread(target=keep_alive, daemon=True)                    │
+│    │       └─▶ Prevents SageMaker session timeout during long runs                 │
+│    │                                                                                 │
+│    ├─▶ 3. GENERATE ALL SCENARIOS                                                    │
+│    │       └─▶ generate_compliance_scenarios()                                      │
+│    │           │                                                                     │
+│    │           └─▶ FOR EACH BATCH (0 to NUM_BATCHES-1):                            │
+│    │               │                                                                 │
+│    │               ├─▶ 3a. retrieve_s3_policies()                                  │
+│    │               │       └─▶ List S3 bucket for policy files                     │
+│    │               │       └─▶ Random sample POLICIES_PER_SCENARIO files           │
+│    │               │       └─▶ Read content + extract policy IDs                   │
+│    │               │                                                                 │
+│    │               ├─▶ 3b. generate_scenario_batch()                               │
+│    │               │       └─▶ Construct prompt with policies                      │
+│    │               │       └─▶ bedrock_call_with_retry()                           │
+│    │               │           └─▶ bedrock_runtime.converse()                      │
+│    │               │       └─▶ Handle tool_use responses (loop)                    │
+│    │               │       └─▶ Extract scenarios from JSON tool                    │
+│    │               │       └─▶ Append policy IDs to each scenario                  │
+│    │               │                                                                 │
+│    │               ├─▶ 3c. SAVE BATCH CHECKPOINT                                   │
+│    │               │       └─▶ Write batch_{n}.json locally                        │
+│    │               │                                                                 │
+│    │               └─▶ 3d. RATE LIMIT PAUSE                                        │
+│    │                       └─▶ time.sleep(2)                                       │
+│    │                                                                                 │
+│    ├─▶ 4. SAVE FINAL OUTPUT (LOCAL)                                                │
+│    │       └─▶ save_scenarios_to_file()                                            │
+│    │           └─▶ Write scenarios.json with metadata                              │
+│    │                                                                                 │
+│    └─▶ 5. SAVE FINAL OUTPUT (S3)                                                   │
+│            └─▶ save_scenarios_to_s3()                                              │
+│                └─▶ Upload scenarios.json to S3                                     │
+│                                                                                      │
+└─────────────────────────────────────────────────────────────────────────────────────┘
 
-Compare model performance across different LLMs (Claude variants, Nova Premier, Nova 2 Lite)
+```
 
-Measure cost-effectiveness by tracking token usage for price/performance analysis
+---
 
-Evaluate reasoning quality through detailed explanations from each model
+### Step 4: Judge Scenarios
 
-Assess scenario complexity impact by varying the number of policies referenced (4, 6, 8, 10 policies per scenario)
+Purpose: Measure LLM accuracy against ground truth labels
+- Extracts policy IDs from scenario text and retrieves full policy content from S3
+- Supports Claude (Converse API with tool use) and Nova/Mistral/DeepSeek (invoke_model with JSON parsing)
+- Records per-scenario token counts (input, output, total) for cost analysis
+- Streams results to file incrementally to prevent data loss during long evaluations
+- Outputs judged-compliant boolean, reasoning, model metadata, and timestamp per scenario
 
-The system generates realistic organizational scenarios that either comply with or violate NIST SP 800-53 security controls, then tests whether LLMs can correctly identify compliance status and provide accurate reasoning - essentially automating compliance auditing tasks.
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                           STEP 4 EXECUTION FLOW                                      │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                      │
+│  main(model_configs, scenarios, num_scenarios, start_index)                         │
+│    │                                                                                 │
+│    ├─▶ 1. START KEEP-ALIVE THREAD                                                   │
+│    │       └─▶ threading.Thread(target=keep_alive, daemon=True)                    │
+│    │       └─▶ Prevents SageMaker session timeout during long runs                 │
+│    │                                                                                 │
+│    ├─▶ 2. VALIDATE & NORMALIZE INPUTS                                               │
+│    │       ├─▶ model_configs: "all" → expand to all MODELS with temp=0.0           │
+│    │       ├─▶ model_configs: dict → wrap in list                                  │
+│    │       ├─▶ scenarios: "all" → SCENARIOS array                                  │
+│    │       └─▶ scenarios: str → wrap in list                                       │
+│    │                                                                                 │
+│    ├─▶ 3. PRINT PROCESSING SUMMARY                                                  │
+│    │       └─▶ Display models, scenarios, counts, start_index                      │
+│    │       └─▶ Wait for user confirmation (input())                                │
+│    │                                                                                 │
+│    ├─▶ 4. NESTED LOOP: FOR EACH MODEL × SCENARIO FILE                              │
+│    │       │                                                                         │
+│    │       ├─▶ 4a. LOAD BASE MODEL CONFIG                                          │
+│    │       │       └─▶ Find model ARN from MODELS array by name                    │
+│    │       │                                                                         │
+│    │       ├─▶ 4b. LOAD SCENARIOS FROM S3                                          │
+│    │       │       └─▶ load_scenarios_from_s3(BUCKET, prefix, filename)            │
+│    │       │                                                                         │
+│    │       ├─▶ 4c. CONSTRUCT OUTPUT PATHS                                          │
+│    │       │       └─▶ Local: FOLDER_JUDGED_SCENARIOS / {batch_name}.json          │
+│    │       │       └─▶ S3: scenarios-judged/{batch_name}.json                      │
+│    │       │                                                                         │
+│    │       ├─▶ 4d. JUDGE ALL SCENARIOS (STREAMING)                                 │
+│    │       │       └─▶ judge_scenarios_streaming(                                  │
+│    │       │               source_scenarios, model_arn, temperature,               │
+│    │       │               num_scenarios, start_index, output_file                 │
+│    │       │           )                                                            │
+│    │       │                                                                         │
+│    │       ├─▶ 4e. UPLOAD RESULTS TO S3                                            │
+│    │       │       └─▶ save_file_to_s3(local_path, BUCKET, s3_key)                 │
+│    │       │                                                                         │
+│    │       └─▶ 4f. PRINT BATCH COMPLETION STATUS                                   │
+│    │                                                                                 │
+│    └─▶ 5. ERROR HANDLING                                                            │
+│            └─▶ Try/except per batch with traceback printing                        │
+│            └─▶ Continue to next batch on error                                     │
+│                                                                                      │
+└─────────────────────────────────────────────────────────────────────────────────────┘
 
-### 0. Generate Controls (`0-GenerateControls.ipynb`)
-**Purpose**: Extract and process NIST SP 800-53 security controls
-- Uses NIST Open Security Controls Assessment Language (OSCAL) JSON control file as source (https://pages.nist.gov/OSCAL-Reference/models/v1.1.0/complete/json-reference/)
-- Developed by the National Institute of Standards and Technology (NIST), OSCAL is a standardized, machine-readable framework (using XML, JSON, or YAML) designed to streamline the documentation, implementation, and assessment of security controls. 
-- Extracts control families and individual controls
-- Substitutes organization-specific parameters
-- Outputs structured JSONL and markdown formats
+```
 
-### 1. Generate Policies (`1-GeneratePolicies.ipynb`)
-**Purpose**: Convert NIST controls into organizational policies using LLM
-- Transforms technical controls into business-readable policies
-- Uses AWS Bedrock for policy generation
-- Creates RAG-optimized policy documents
-- Implements validation and quality checks
-
-### 2. Generate Scenarios (`2-GenerateScenarios.ipynb`)
-**Purpose**: Create realistic compliance test scenarios
-- Generates x scenarios (50% compliant, 50% non-compliant)
-- Creates diverse, realistic business situations
-- Balances scenario complexity and clarity
-
-### 3. Judge Scenarios (`3-JudgeScenarios.ipynb`)
-**Purpose**: Evaluate LLM performance on compliance assessment
-- Tests multiple LLM models against generated scenarios
-- Measures accuracy, consistency, and reasoning quality
-- Provides comparative analysis across models
+---
 
 ## Key Features
 
-- **Multi-Model Evaluation**: Compare performance across different LLM providers and models
-- **Realistic Scenarios**: Generate contextually relevant compliance situations
-- **Cost Analysis**: Track API costs and processing time for price/performance optimization
-- **Validation Pipeline**: Independent judgment system to verify scenario quality
-- **Scalable Architecture**: AWS-native implementation for enterprise-scale evaluation
+Multi-Model Evaluation
+- Supports Claude (3.7 Sonnet, 4 Sonnet, Opus 4.5), Nova (Premier, 2 Lite), Mistral Large 3, and DeepSeek v3
+- Claude models use Converse API with tool use for structured JSON output
+- Nova and other models use invoke_model API with JSON parsing
+- Configurable temperature settings (0.0, 0.1) per model
+
+Scenario Generation
+- 1,000 scenarios (500 compliant, 500 non-compliant) generated from 10 randomly selected policies per scenario
+- Alternating batch generation ensures balanced distribution
+- Each scenario contains 350+ words with specific business details
+
+Token and Cost Tracking
+- Per-scenario token counts (input, output, total) recorded for each evaluation
+- Enables price/performance analysis across models
+- Timestamps recorded for processing time analysis
+
+Streaming Output
+- Results written incrementally to prevent data loss during long-running evaluations
+- Batch checkpoint files saved after each generation batch
+- Supports resume from any point using start_index parameter
 
 ## AWS Services Used
 
-- **AWS Bedrock**: LLM inference and model access
-- **Amazon S3**: Data storage and retrieval
-- **AWS Knowledge Base**: RAG functionality for context-aware generation
-- **SageMaker**: Notebook execution environment
+Amazon Bedrock
+- Model inference via Converse API (Claude) and invoke_model API (Nova, Mistral, DeepSeek)
+- Tool use configuration forces structured JSON output from Claude models
+- Inference profiles for cross-region model access
+
+Amazon S3
+- Source storage for NIST SP 800-53 Rev 5 catalog (OSCAL JSON format)
+- Policy documents stored as markdown files
+- Scenario files stored as JSON with ground truth labels
+- Evaluation results stored with model-specific naming
+
+Amazon SageMaker Studio
+- Jupyter notebook execution environment (Python 3.11)
+- Background keep-alive thread prevents session timeout during long runs
+
+Why RAG Was Abandoned
+
+The pipeline initially used AWS Bedrock Knowledge Base for policy retrieval. This approach was abandoned for two reasons:
+
+1. Retrieval accuracy: Knowledge Base RAG returned incomplete policy chunks, missing relevant sections needed for accurate scenario generation and evaluation.
+
+2. Evaluation integrity: For ground truth labeling, the pipeline requires 100% certainty about which policies inform each scenario. RAG retrieval introduces non-deterministic policy selection, making it impossible to establish reliable ground truth labels.
+
+The current implementation uses direct S3 policy retrieval, which guarantees complete policy content and deterministic selection.
 
 ## Getting Started
 
-1. **Setup**: Ensure AWS credentials and Bedrock model access
-2. **Run Notebooks**: Execute in sequence (0 → 1 → 2 → 3)
-3. **Configure Models**: Update model configurations in notebook 3 for your evaluation targets
-4. **Analyze Results**: Review generated metrics and cost analysis
+Prerequisites
+- AWS account with Bedrock model access enabled for target models
+- SageMaker Studio domain with appropriate execution role
+- S3 bucket with read/write permissions
+- NIST SP 800-53 Rev 5 catalog file (OSCAL JSON format)
+
+Execution Sequence
+1. Run 1-GenerateControls.ipynb: Parses NIST catalog, outputs JSONL and markdown controls
+2. Run 2-GeneratePolicies.ipynb: Generates organizational policies using Bedrock LLM
+3. Run 3-GenerateScenarios.ipynb: Creates labeled compliance scenarios
+4. Run 4-JudgeScenarios.ipynb: Evaluates LLM accuracy against ground truth
+
+Configuration
+- Model selection: Update MODELS dictionary in each notebook
+- Scenario parameters: Adjust SCENARIOS_PER_BATCH, NUM_BATCHES, POLICIES_PER_SCENARIO
+- Temperature: Set per-model temperature in model_configs parameter
 
 ## Output Artifacts
 
-- **Controls**: Processed NIST controls in JSONL/markdown
-- **Policies**: Organization-specific policy documents
-- **Scenarios**: Labeled compliance test cases
-- **Evaluations**: Model performance metrics and cost analysis
-- **Reports**: Comparative analysis across LLM models
+Step 1 Outputs
+- NIST_SP-800-53_rev5_catalog.jsonl: One control per line, machine-readable
+- controls/markdown/by-family/: Controls organized by family (AC, AU, CA, etc.)
+- controls/markdown/all-controls/: All controls in single directory
+
+Step 2 Outputs
+- policies/markdown/by-family/{timestamp}_{model}/: Policies organized by family
+- policies/markdown/all-controls/{timestamp}_{model}/: All policies in single directory
+
+Step 3 Outputs
+- scenarios/scenarios.json: Complete scenario set with ground truth labels
+- scenarios/batch_{n}.json: Individual batch checkpoints for crash recovery
+
+Step 4 Outputs
+- scenarios-judged/judged_scenarios_batch-{scenario_file}-{model}-temp{temp}.json
+- Contains original scenario fields plus: judged-compliant, judged-compliant-reason, token counts, timestamp
 
 ## Performance Considerations
 
-- **API Throttling**: Implements 1-2 second delays between Bedrock calls
-- **Batch Processing**: Optimized for large-scale scenario generation
-- **Cost Monitoring**: Tracks token usage and API costs per model
-- **Error Handling**: Robust retry logic with exponential backoff
+API Throttling
+- Exponential backoff retry logic: delay = base_delay × 2^attempt (max 5 retries)
+- 2-second pause between batches in scenario generation
+- ThrottlingException handling with automatic retry
+
+Memory and I/O
+- Streaming output prevents memory accumulation during long runs
+- Batch checkpoints enable crash recovery without full restart
+- Background keep-alive thread prevents SageMaker session timeout
 
 ## Use Cases
 
-- **Model Selection**: Choose optimal LLM for compliance automation
-- **Cost Optimization**: Identify best price/performance ratios
-- **Compliance Automation**: Automate policy adherence checking
-- **Risk Assessment**: Evaluate model reliability for regulatory tasks
+Model Selection for Compliance Automation
+- Compare accuracy (true positive rate, false negative rate) across models
+- Identify models with lowest false negative rate for regulatory-critical applications
+- Evaluate consistency across multiple temperature settings
 
----
+Price/Performance Optimization
+- Calculate cost per correct judgment using token counts and model pricing
+- Identify optimal model for given accuracy threshold and budget constraint
+- Compare Claude vs Nova vs Mistral (coming) and Deepseek (coming) for cost-sensitive deployments
+
+Compliance Workflow Development
+- Use generated policies as templates for organizational policy documents
+- Adapt scenario patterns for domain-specific compliance testing
+- Extend evaluation framework to other compliance standards (FedRAMP, HIPAA, PCI-DSS)
+
+Risk Quantification
+- Weighted false positve rate to quantify missed violation (i.e. indicating a scenario is compliant when it is not)
+- Confusion matrix analysis for error pattern identification
 
 # LLM Compliance Evaluation Analysis
 
-## Understanding the Stakes
-
-In compliance evaluation, the error types have asymmetric consequences:
-
-| Error Type | What It Means | Risk Level |
-|------------|---------------|------------|
-| **False Positive (FP)** | Model says "Compliant" when actually **Non-Compliant** | 🔴 **Critical** - Violations slip through |
-| **False Negative (FN)** | Model says "Non-Compliant" when actually **Compliant** | 🟡 **Moderate** - Extra review burden |
-
-A **weighted error score**: `Weighted Score = (2 × FP%) + (1 × FN%)` was used to rank performance.
+---
+![Confusion Matrix Analysis](/images/confusion_matrix_analysis.png)
 
 ---
 
-## Performance by Complexity Level
+### Summary Table
 
-### Complexity 4 (Simplest - 4 Policies)
+| Model | Temp | Policies | Total | TP | TN | FP | FN | FP Rate | FN Rate |
+|-------|------|----------|-------|----|----|----|----|---------|---------|
+| Claude Opus 4.5 | 0.0 | 4 | 200 | 90 | 92 | 5 | 13 | 2.5% | 6.5% |
+| Claude Opus 4.5 | 0.1 | 4 | 200 | 89 | 91 | 6 | 14 | 3.0% | 7.0% |
+| Claude Opus 4.5 | 0.0 | 6 | 200 | 87 | 92 | 13 | 8 | 6.5% | 4.0% |
+| Claude Opus 4.5 | 0.1 | 6 | 200 | 87 | 90 | 13 | 10 | 6.5% | 5.0% |
+| Claude Opus 4.5 | 0.0 | 8 | 200 | 90 | 92 | 10 | 8 | 5.0% | 4.0% |
+| Claude Opus 4.5 | 0.1 | 8 | 200 | 89 | 88 | 11 | 12 | 5.5% | 6.0% |
+| Claude Opus 4.5 | 0.0 | 10 | 196 | 92 | 61 | 8 | 35 | 4.1% | 17.9% |
+| Claude Opus 4.5 | 0.1 | 10 | 196 | 93 | 65 | 7 | 31 | 3.6% | 15.8% |
+| Claude 4 Sonnet | 0.0 | 4 | 200 | 90 | 84 | 5 | 21 | 2.5% | 10.5% |
+| Claude 4 Sonnet | 0.1 | 4 | 200 | 88 | 81 | 7 | 24 | 3.5% | 12.0% |
+| Claude 4 Sonnet | 0.0 | 6 | 200 | 89 | 69 | 11 | 31 | 5.5% | 15.5% |
+| Claude 4 Sonnet | 0.1 | 6 | 200 | 90 | 70 | 10 | 30 | 5.0% | 15.0% |
+| Claude 4 Sonnet | 0.0 | 8 | 200 | 88 | 70 | 12 | 30 | 6.0% | 15.0% |
+| Claude 4 Sonnet | 0.1 | 8 | 200 | 88 | 77 | 12 | 23 | 6.0% | 11.5% |
+| Claude 4 Sonnet | 0.0 | 10 | 196 | 95 | 52 | 5 | 44 | 2.6% | 22.4% |
+| Claude 4 Sonnet | 0.1 | 10 | 196 | 95 | 55 | 5 | 41 | 2.6% | 20.9% |
+| Claude 3.7 Sonnet | 0.0 | 4 | 200 | 88 | 89 | 7 | 16 | 3.5% | 8.0% |
+| Claude 3.7 Sonnet | 0.1 | 4 | 200 | 89 | 90 | 6 | 15 | 3.0% | 7.5% |
+| Claude 3.7 Sonnet | 0.0 | 6 | 200 | 92 | 91 | 8 | 9 | 4.0% | 4.5% |
+| Claude 3.7 Sonnet | 0.1 | 6 | 200 | 92 | 92 | 8 | 8 | 4.0% | 4.0% |
+| Claude 3.7 Sonnet | 0.0 | 8 | 200 | 90 | 76 | 10 | 24 | 5.0% | 12.0% |
+| Claude 3.7 Sonnet | 0.1 | 8 | 200 | 89 | 80 | 11 | 20 | 5.5% | 10.0% |
+| Claude 3.7 Sonnet | 0.0 | 10 | 196 | 93 | 75 | 7 | 21 | 3.6% | 10.7% |
+| Claude 3.7 Sonnet | 0.1 | 10 | 196 | 92 | 76 | 8 | 20 | 4.1% | 10.2% |
+| Nova Premier | 0.0 | 4 | 200 | 92 | 85 | 3 | 20 | 1.5% | 10.0% |
+| Nova Premier | 0.1 | 4 | 200 | 92 | 82 | 3 | 23 | 1.5% | 11.5% |
+| Nova Premier | 0.0 | 6 | 200 | 93 | 82 | 7 | 18 | 3.5% | 9.0% |
+| Nova Premier | 0.1 | 6 | 200 | 93 | 81 | 7 | 19 | 3.5% | 9.5% |
+| Nova Premier | 0.0 | 8 | 200 | 80 | 80 | 20 | 20 | 10.0% | 10.0% |
+| Nova Premier | 0.1 | 8 | 200 | 80 | 82 | 20 | 18 | 10.0% | 9.0% |
+| Nova Premier | 0.0 | 10 | 196 | 95 | 71 | 5 | 25 | 2.6% | 12.8% |
+| Nova Premier | 0.1 | 10 | 196 | 94 | 70 | 6 | 26 | 3.1% | 13.3% |
+| Nova 2 Lite | 0.0 | 4 | 200 | 70 | 103 | 25 | 2 | 12.5% | 1.0% |
+| Nova 2 Lite | 0.0 | 6 | 200 | 70 | 98 | 30 | 2 | 15.0% | 1.0% |
+| Nova 2 Lite | 0.0 | 8 | 200 | 46 | 100 | 54 | 0 | 27.0% | 0.0% |
+| Nova 2 Lite | 0.0 | 10 | 196 | 73 | 96 | 27 | 0 | 13.8% | 0.0% |
 
-| Model | FP% | FN% | Weighted Score | Rank |
-|-------|-----|-----|----------------|------|
-| **nova_premier** | 1.5% | 11.5% | **14.5** | 🥇 1st |
-| claude_4_sonnet | 2.5% | 10.5% | 15.5 | 🥈 2nd |
-| claude_opus_4_5 | 2.5% | 6.5% | 11.5 | 🥇 **Best Overall** |
-| claude_3_7_sonnet | 3.0% | 7.5% | 13.5 | 3rd |
-| nova_2_lite | 11.0% | 0.5% | **22.5** | ❌ 5th |
+Column definitions:
+- Model: LLM tested
+- Temp: Model temperature used
+- Policies: Number of policies referenced per scenario (complexity measure)
+- Total: Number of scenarios tested
+- TP: True Positives (correctly identified compliant scenarios)
+- TN: True Negatives (correctly identified non-compliant scenarios)
+- FP: False Positives (non-compliant scenarios incorrectly marked as compliant)
+- FN: False Negatives (compliant scenarios incorrectly flagged as violations)
+- FP Rate: FP / (FP + TN) — false alarm rate
+- FN Rate: FN / (FN + TP) — missed violation rate
 
-**Key Insight:** At low complexity, all models except nova_2_lite perform well. Claude Opus 4.5 achieves the best balance, while Nova Premier has the lowest FP rate but higher FN.
+### Key Observations
 
----
+Impact of Scenario Complexity:
+- All models show degraded performance as policy count increases from 4 to 10
+- False negative rates increase significantly at 10 policies per scenario
+- Claude 4 Sonnet shows largest degradation (10.5% FN at 4 policies vs 22.4% at 10 policies)
 
-### Complexity 6 (Moderate - 6 Policies)
+Temperature Effect:
+- Minimal impact on error rates for most models
+- Claude 4 Sonnet shows slight improvement at temp=0.1 for higher complexity scenarios
 
-| Model | FP% | FN% | Weighted Score | Rank |
-|-------|-----|-----|----------------|------|
-| **nova_premier** | 3.5% | 9.5% | **16.5** | 🥇 1st (FP-weighted) |
-| claude_3_7_sonnet | 4.0% | 4.0% | 12.0 | 🥇 **Best Overall** |
-| claude_4_sonnet | 5.5% | 15.5% | 26.5 | 4th |
-| claude_opus_4_5 | 6.5% | 4.0% | 17.0 | 2nd |
-| nova_2_lite | 15.0% | 1.0% | **31.0** | ❌ 5th |
+Nova 2 Lite Behavior:
+- Exhibits strong bias toward predicting "compliant" (near-zero false negatives)
+- High false positive rates (12.5% - 27.0%) indicate poor violation detection
+- Not recommended for compliance workloads requiring violation identification
+- Temperature of 0.1 was not pursed due to poor performance at 0.0
 
-**Key Insight:** Claude 3.7 Sonnet excels here with perfectly balanced 4%/4% error rates. Nova Premier maintains the lowest FP rate but trades off with higher FN.
-
----
-
-### Complexity 8 (High - 8 Policies)
-
-| Model | FP% | FN% | Weighted Score | Rank |
-|-------|-----|-----|----------------|------|
-| **claude_opus_4_5** | 5.0% | 4.0% | **14.0** | 🥇 **Best** |
-| claude_3_7_sonnet | 5.5% | 10.0% | 21.0 | 2nd |
-| claude_4_sonnet | 6.0% | 15.0% | 27.0 | 3rd |
-| nova_premier | 10.0% | 9.0% | 29.0 | 4th |
-| nova_2_lite | 27.0% | 0.0% | **54.0** | ❌ 5th |
-
-**Key Insight:** Claude Opus 4.5 clearly separates from the pack at higher complexity. Nova Premier's FP rate jumps significantly (3.5% → 10%), indicating degradation under complexity.
-
----
-
-### Complexity 10 (Highest - 10 Policies)
-
-| Model | FP% | FN% | Weighted Score | Rank |
-|-------|-----|-----|----------------|------|
-| **nova_premier** | 3.1% | 13.3% | **19.5** | 🥇 1st (FP-weighted) |
-| claude_3_7_sonnet | 4.1% | 10.2% | 18.4 | 🥇 **Best Overall** |
-| claude_4_sonnet | 2.6% | 22.4% | 27.6 | 3rd |
-| claude_opus_4_5 | 4.1% | 17.9% | 26.1 | 2nd |
-| nova_2_lite | 14.3% | 0.0% | **28.6** | 4th |
-
-**Key Insight:** Interesting reversal—all models show increased FN rates at max complexity, but FP rates actually improve for some (claude_4_sonnet achieves lowest FP at 2.6%). This suggests models become more conservative under complexity.
-
----
-
-## Model-by-Model Analysis
-
-### 🏆 Claude Opus 4.5 — **Recommended for Production**
-
-| Complexity | FP% | FN% | Assessment |
-|------------|-----|-----|------------|
-| 4 | 2.5% | 6.5% | ✅ Excellent |
-| 6 | 6.5% | 4.0% | ✅ Good |
-| 8 | 5.0% | 4.0% | ✅ **Outstanding** |
-| 10 | 4.1% | 17.9% | ⚠️ FN spike |
-
-**Verdict:** Most consistent performer across complexity levels. The 5%/4% at Complexity 8 is exceptional. Degradation at Complexity 10 is primarily in FN (acceptable for compliance).
-
----
-
-### 🥈 Claude 3.7 Sonnet — **Strong Runner-Up**
-
-| Complexity | FP% | FN% | Assessment |
-|------------|-----|-----|------------|
-| 4 | 3.0% | 7.5% | ✅ Good |
-| 6 | 4.0% | 4.0% | ✅ **Excellent** |
-| 8 | 5.5% | 10.0% | ✅ Good |
-| 10 | 4.1% | 10.2% | ✅ Good |
-
-**Verdict:** Remarkably stable across all complexity levels. Never exceeds 5.5% FP. The balanced 4%/4% at Complexity 6 is noteworthy. **Best cost-performance ratio** if Opus pricing is a concern.
-
----
-
-### 🥉 Nova Premier — **Conservative Choice**
-
-| Complexity | FP% | FN% | Assessment |
-|------------|-----|-----|------------|
-| 4 | 1.5% | 11.5% | ✅ Lowest FP |
-| 6 | 3.5% | 9.5% | ✅ Lowest FP |
-| 8 | 10.0% | 9.0% | ⚠️ FP spike |
-| 10 | 3.1% | 13.3% | ✅ Good FP |
-
-**Verdict:** Achieves lowest FP rates at low/medium complexity but shows concerning instability at Complexity 8 (10% FP). The recovery at Complexity 10 is puzzling—may indicate evaluation variance.
-
----
-
-### ⚠️ Claude 4 Sonnet — **Overly Conservative**
-
-| Complexity | FP% | FN% | Assessment |
-|------------|-----|-----|------------|
-| 4 | 2.5% | 10.5% | ✅ Good FP |
-| 6 | 5.5% | 15.5% | ⚠️ High FN |
-| 8 | 6.0% | 15.0% | ⚠️ High FN |
-| 10 | 2.6% | 22.4% | ⚠️ **Excessive FN** |
-
-**Verdict:** This model exhibits a strong conservative bias—it flags too many scenarios as non-compliant. While this keeps FP rates reasonable, the 22.4% FN at Complexity 10 means nearly 1 in 4 compliant scenarios get incorrectly flagged, creating significant operational burden.
-
----
-
-### ❌ Nova 2 Lite — **Not Recommended**
-
-| Complexity | FP% | FN% | Assessment |
-|------------|-----|-----|------------|
-| 4 | 11.0% | 0.5% | ❌ High FP |
-| 6 | 15.0% | 1.0% | ❌ High FP |
-| 8 | 27.0% | 0.0% | ❌ **Critical FP** |
-| 10 | 14.3% | 0.0% | ❌ High FP |
-
-**Verdict:** This model has a fundamental flaw—it almost always predicts "Compliant." The 0% FN rates are a red flag, not a feature. At 27% FP (Complexity 8), over 1 in 4 non-compliant scenarios would be incorrectly approved. **Unsuitable for compliance use cases.**
-
----
-
-## Complexity Scaling Trends
-
-```
-FP% Trend by Complexity
-                    4       6       8       10
-                    │       │       │       │
-claude_opus_4_5     2.5 ──► 6.5 ──► 5.0 ──► 4.1   ← Most stable
-claude_3_7_sonnet   3.0 ──► 4.0 ──► 5.5 ──► 4.1   ← Very stable  
-claude_4_sonnet     2.5 ──► 5.5 ──► 6.0 ──► 2.6   ← Variable
-nova_premier        1.5 ──► 3.5 ──► 10.0 ──► 3.1  ← Unstable at 8
-nova_2_lite         11.0 ─► 15.0 ─► 27.0 ─► 14.3  ← Unacceptable
-```
-
-**Key Observations:**
-1. **Complexity 8 appears to be a critical threshold** where several models show degradation
-2. **Claude models show better stability** across complexity scaling
-3. **Nova Premier's Complexity 8 spike** (10% FP) warrants investigation
-4. **Complexity 10 results are counterintuitive**—models become more conservative, reducing FP but increasing FN
-
----
-
-## Final Recommendations
-
-### For Production Compliance Systems
-
-| Priority | Recommendation |
-|----------|----------------|
-| **Primary** | **Claude Opus 4.5** — Best overall balance, exceptional at high complexity |
-| **Budget-Conscious** | **Claude 3.7 Sonnet** — Nearly as good, more predictable behavior |
-| **Lowest FP Priority** | **Nova Premier** — Use only for Complexity ≤6 scenarios |
-
-### Configuration Recommendations
-
-| Model | Optimal Use Case |
-|-------|------------------|
-| Claude Opus 4.5 | Complex multi-policy evaluations (6-10 policies) |
-| Claude 3.7 Sonnet | General-purpose compliance, cost-sensitive deployments |
-| Nova Premier | Simple policy checks (≤4 policies), with human review escalation |
-| Claude 4 Sonnet | Not recommended—excessive false negatives |
-| Nova 2 Lite | **Do not use** for compliance |
-
-### Caveats
-
-1. **Temperature settings varied** across models (0.0-0.2)—this may impact comparability
-2. **Consider ensemble approaches**: Route complex scenarios to Opus, simple ones to 3.7 Sonnet
-3. **Human-in-the-loop**: Even the best model (Opus at 5% FP) means 1 in 20 violations could slip through—implement sampling-based human review
-
----

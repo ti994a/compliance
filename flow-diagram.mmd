@@ -1,0 +1,80 @@
+flowchart TD
+    %% Data Sources
+    NIST[NIST SP 800-53<br/>Security Controls<br/>📋 Official Standards]
+    
+    %% Step 0: Generate Controls
+    subgraph Step0 ["🔄 Step 0: Generate Controls"]
+        SM0[SageMaker Notebook 0]
+        SM0 --> S3_Controls[S3: Controls<br/>📁 JSONL + Markdown]
+    end
+    
+    %% Step 1: Generate Policies  
+    subgraph Step1 ["📝 Step 1: Generate Policies"]
+        SM1[SageMaker Notebook 1]
+        BR1[AWS Bedrock<br/>🤖 LLM Policy Generation]
+        SM1 --> BR1
+        BR1 --> S3_Policies[S3: Policies<br/>📁 Business-Readable Docs]
+    end
+    
+    %% Step 2: Generate Scenarios
+    subgraph Step2 ["🎭 Step 2: Generate Scenarios"]
+        SM2[SageMaker Notebook 2]
+        BR2[AWS Bedrock<br/>🤖 LLM Scenario Creation]
+        KB[AWS Knowledge Base<br/>🔍 RAG Context]
+        SM2 --> BR2
+        SM2 --> KB
+        BR2 --> S3_Scenarios[S3: Test Scenarios<br/>📁 50% Compliant + 50% Non-Compliant<br/>with Ground Truth Labels]
+    end
+    
+    %% Step 3: Generate More Scenarios (if needed)
+    subgraph Step3 ["🎭 Step 3: Generate More Scenarios"]
+        SM3[SageMaker Notebook 3]
+        BR3[AWS Bedrock<br/>🤖 Additional Scenario Creation]
+        SM3 --> BR3
+        BR3 --> S3_Scenarios2[S3: Additional Scenarios<br/>📁 Extended Test Sets]
+    end
+    
+    %% Step 4: Judge Scenarios (Main Evaluation)
+    subgraph Step4 ["⚖️ Step 4: Judge Scenarios - LLM Performance Evaluation"]
+        SM4[SageMaker Notebook 4<br/>🎯 Current Active Notebook]
+        
+        subgraph Models ["Multiple LLM Models"]
+            Claude[Claude 4 Sonnet<br/>Claude Opus 4.5<br/>Claude 3.7 Sonnet]
+            Nova[Nova Premier<br/>Nova 2 Lite]
+            DeepSeek[DeepSeek v3.2]
+        end
+        
+        SM4 --> Models
+        Models --> S3_Results[S3: Evaluation Results<br/>📊 Accuracy + Token Usage<br/>+ Cost Analysis]
+    end
+    
+    %% Business Outcomes
+    subgraph Outcomes ["📈 Business Outcomes"]
+        Analysis[Model Performance Analysis<br/>• Accuracy Metrics<br/>• Cost per Evaluation<br/>• Price/Performance Ratios]
+        Decision[LLM Selection Decision<br/>• Best Model for Compliance<br/>• Cost Optimization<br/>• Risk Assessment]
+    end
+    
+    %% Flow connections
+    NIST --> Step0
+    S3_Controls --> Step1
+    S3_Policies --> Step2
+    S3_Scenarios --> Step3
+    S3_Scenarios2 --> Step4
+    S3_Scenarios --> Step4
+    S3_Results --> Analysis
+    Analysis --> Decision
+    
+    %% Styling
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:#fff
+    classDef s3 fill:#569A31,stroke:#232F3E,stroke-width:2px,color:#fff
+    classDef sagemaker fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:#fff
+    classDef bedrock fill:#FF6B6B,stroke:#232F3E,stroke-width:2px,color:#fff
+    classDef outcome fill:#4ECDC4,stroke:#232F3E,stroke-width:2px,color:#fff
+    classDef current fill:#FFD700,stroke:#232F3E,stroke-width:3px,color:#000
+    
+    class SM0,SM1,SM2,SM3 sagemaker
+    class SM4 current
+    class BR1,BR2,BR3,Models,Claude,Nova,DeepSeek bedrock
+    class S3_Controls,S3_Policies,S3_Scenarios,S3_Scenarios2,S3_Results s3
+    class KB aws
+    class Analysis,Decision outcome
