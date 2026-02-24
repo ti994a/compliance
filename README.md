@@ -51,7 +51,7 @@ Goals:
 
 ## Processing Steps
 
-## Step 1: Generate Controls
+### Step 1: Generate Controls
 
 Purpose: Transform NIST SP 800-53 Rev 5 catalog into machine-readable formats
 - Parses official NIST OSCAL JSON catalog from S3
@@ -424,7 +424,7 @@ Risk Quantification
 
 ---
 
-### Summary Table
+## Summary Table
 
 | Model | Temp | Policies | Total | TP | TN | FP | FN | FP Rate | FN Rate |
 |-------|------|----------|-------|----|----|----|----|---------|---------|
@@ -477,7 +477,19 @@ Column definitions:
 - FP Rate: FP / (FP + TN) — false alarm rate
 - FN Rate: FN / (FN + TP) — missed violation rate
 
-### Key Observations
+## Pricing Comparison
+
+| Model | Price per 1M Input Tokens | Price per 1M Output Tokens |
+|---|---|---|
+| Amazon Nova 2 Lite | $0.33 | $2.75 |
+| Amazon Nova Premier | $2.50 | $12.50 |
+| Claude 3.7 Sonnet | $3.00 | $15.00 |
+| Claude Sonnet 4 | $3.00 | $15.00 |
+| Claude Opus 4.5 | $5.50 | $27.50 |
+
+*US East (N. Virginia), Standard Tier/Non-Batch, Geo cross-region inference and in-region*
+
+## Key Observations
 
 Impact of Scenario Complexity:
 - All models show degraded performance as policy count increases from 4 to 10
