@@ -435,58 +435,25 @@ Among those models, we see a notable dip in Nova Premier's performance at comple
 
 ---
 
-## Summary Table
+## Confusion Matrix Summary
+| Model & Temp | Complexity 4 | Complexity 6 | Complexity 8 | Complexity 10 |
+|---|---|---|---|---|
+| **claude 3 7 sonnet** (T=0.0) | TP:89 FP:7<br>FN:16 TN:88<br>FPR:7.4% FNR:15.2%  | TP:91 FP:8<br>FN:9 TN:92<br>FPR:8.0% FNR:9.0%  | TP:76 FP:10<br>FN:24 TN:90<br>FPR:10.0% FNR:24.0%  | TP:75 FP:7<br>FN:21 TN:93<br>FPR:7.0% FNR:21.9%  |
+| **claude 3 7 sonnet** (T=0.1) | TP:90 FP:6<br>FN:15 TN:89<br>FPR:6.3% FNR:14.3%  | TP:92 FP:8<br>FN:8 TN:92<br>FPR:8.0% FNR:8.0%  | TP:80 FP:11<br>FN:20 TN:89<br>FPR:11.0% FNR:20.0%  | TP:76 FP:8<br>FN:20 TN:92<br>FPR:8.0% FNR:20.8%  |
+| **claude 4 sonnet** (T=0.0) | TP:84 FP:5<br>FN:21 TN:90<br>FPR:5.3% FNR:20.0%  | TP:69 FP:11<br>FN:31 TN:89<br>FPR:11.0% FNR:31.0%  | TP:70 FP:12<br>FN:30 TN:88<br>FPR:12.0% FNR:30.0%  | TP:52 FP:5<br>FN:44 TN:95<br>FPR:5.0% FNR:45.8%  |
+| **claude 4 sonnet** (T=0.1) | TP:81 FP:7<br>FN:24 TN:88<br>FPR:7.4% FNR:22.9%  | TP:70 FP:10<br>FN:30 TN:90<br>FPR:10.0% FNR:30.0%  | TP:77 FP:12<br>FN:23 TN:88<br>FPR:12.0% FNR:23.0%  | TP:55 FP:5<br>FN:41 TN:95<br>FPR:5.0% FNR:42.7%  |
+| **claude opus 4 5** (T=0.0) | TP:92 FP:5<br>FN:13 TN:90<br>FPR:5.3% FNR:12.4%  | TP:92 FP:13<br>FN:8 TN:87<br>FPR:13.0% FNR:8.0%  | TP:92 FP:10<br>FN:8 TN:90<br>FPR:10.0% FNR:8.0%  | TP:61 FP:8<br>FN:35 TN:92<br>FPR:8.0% FNR:36.5%  |
+| **claude opus 4 5** (T=0.1) | TP:91 FP:6<br>FN:14 TN:89<br>FPR:6.3% FNR:13.3%  | TP:90 FP:13<br>FN:10 TN:87<br>FPR:13.0% FNR:10.0%  | TP:88 FP:11<br>FN:12 TN:89<br>FPR:11.0% FNR:12.0%  | TP:65 FP:7<br>FN:31 TN:93<br>FPR:7.0% FNR:32.3%  |
+| **nova 2 lite** (T=0.0) | TP:103 FP:25<br>FN:2 TN:70<br>FPR:26.3% FNR:1.9%  | TP:98 FP:30<br>FN:2 TN:70<br>FPR:30.0% FNR:2.0%  | TP:100 FP:54<br>FN:0 TN:46<br>FPR:54.0% FNR:0.0%  | TP:96 FP:27<br>FN:0 TN:73<br>FPR:27.0% FNR:0.0%  |
+| **nova 2 lite** (T=0.1) | TP:102 FP:23<br>FN:3 TN:72<br>FPR:24.2% FNR:2.9%  | TP:97 FP:30<br>FN:3 TN:70<br>FPR:30.0% FNR:3.0%  | TP:100 FP:54<br>FN:0 TN:46<br>FPR:54.0% FNR:0.0%  | TP:96 FP:27<br>FN:0 TN:73<br>FPR:27.0% FNR:0.0%  |
+| **nova 2 pro** (T=0.0) | TP:72 FP:10<br>FN:33 TN:85<br>FPR:10.5% FNR:31.4%  | TP:45 FP:9<br>FN:55 TN:91<br>FPR:9.0% FNR:55.0%  | TP:48 FP:21<br>FN:52 TN:79<br>FPR:21.0% FNR:52.0%  | TP:48 FP:4<br>FN:48 TN:96<br>FPR:4.0% FNR:50.0%  |
+| **nova 2 pro** (T=0.1) | TP:73 FP:12<br>FN:32 TN:83<br>FPR:12.6% FNR:30.5%  | TP:47 FP:7<br>FN:53 TN:93<br>FPR:7.0% FNR:53.0%  | TP:48 FP:23<br>FN:52 TN:77<br>FPR:23.0% FNR:52.0%  | TP:45 FP:4<br>FN:51 TN:96<br>FPR:4.0% FNR:53.1%  |
+| **nova premier** (T=0.0) | TP:85 FP:3<br>FN:20 TN:92<br>FPR:3.2% FNR:19.0%  | TP:82 FP:7<br>FN:18 TN:93<br>FPR:7.0% FNR:18.0%  | TP:80 FP:20<br>FN:20 TN:80<br>FPR:20.0% FNR:20.0%  | TP:71 FP:5<br>FN:25 TN:95<br>FPR:5.0% FNR:26.0%  |
+| **nova premier** (T=0.1) | TP:82 FP:3<br>FN:23 TN:92<br>FPR:3.2% FNR:21.9%  | TP:81 FP:7<br>FN:19 TN:93<br>FPR:7.0% FNR:19.0%  | TP:82 FP:20<br>FN:18 TN:80<br>FPR:20.0% FNR:18.0%  | TP:70 FP:6<br>FN:26 TN:94<br>FPR:6.0% FNR:27.1%  |
 
-| Model | Temp | Policies | Total | TP | TN | FP | FN | FP Rate | FN Rate |
-|-------|------|----------|-------|----|----|----|----|---------|---------|
-| Claude Opus 4.5 | 0.0 | 4 | 200 | 90 | 92 | 5 | 13 | 2.5% | 6.5% |
-| Claude Opus 4.5 | 0.1 | 4 | 200 | 89 | 91 | 6 | 14 | 3.0% | 7.0% |
-| Claude Opus 4.5 | 0.0 | 6 | 200 | 87 | 92 | 13 | 8 | 6.5% | 4.0% |
-| Claude Opus 4.5 | 0.1 | 6 | 200 | 87 | 90 | 13 | 10 | 6.5% | 5.0% |
-| Claude Opus 4.5 | 0.0 | 8 | 200 | 90 | 92 | 10 | 8 | 5.0% | 4.0% |
-| Claude Opus 4.5 | 0.1 | 8 | 200 | 89 | 88 | 11 | 12 | 5.5% | 6.0% |
-| Claude Opus 4.5 | 0.0 | 10 | 196 | 92 | 61 | 8 | 35 | 4.1% | 17.9% |
-| Claude Opus 4.5 | 0.1 | 10 | 196 | 93 | 65 | 7 | 31 | 3.6% | 15.8% |
-| Claude 4 Sonnet | 0.0 | 4 | 200 | 90 | 84 | 5 | 21 | 2.5% | 10.5% |
-| Claude 4 Sonnet | 0.1 | 4 | 200 | 88 | 81 | 7 | 24 | 3.5% | 12.0% |
-| Claude 4 Sonnet | 0.0 | 6 | 200 | 89 | 69 | 11 | 31 | 5.5% | 15.5% |
-| Claude 4 Sonnet | 0.1 | 6 | 200 | 90 | 70 | 10 | 30 | 5.0% | 15.0% |
-| Claude 4 Sonnet | 0.0 | 8 | 200 | 88 | 70 | 12 | 30 | 6.0% | 15.0% |
-| Claude 4 Sonnet | 0.1 | 8 | 200 | 88 | 77 | 12 | 23 | 6.0% | 11.5% |
-| Claude 4 Sonnet | 0.0 | 10 | 196 | 95 | 52 | 5 | 44 | 2.6% | 22.4% |
-| Claude 4 Sonnet | 0.1 | 10 | 196 | 95 | 55 | 5 | 41 | 2.6% | 20.9% |
-| Claude 3.7 Sonnet | 0.0 | 4 | 200 | 88 | 89 | 7 | 16 | 3.5% | 8.0% |
-| Claude 3.7 Sonnet | 0.1 | 4 | 200 | 89 | 90 | 6 | 15 | 3.0% | 7.5% |
-| Claude 3.7 Sonnet | 0.0 | 6 | 200 | 92 | 91 | 8 | 9 | 4.0% | 4.5% |
-| Claude 3.7 Sonnet | 0.1 | 6 | 200 | 92 | 92 | 8 | 8 | 4.0% | 4.0% |
-| Claude 3.7 Sonnet | 0.0 | 8 | 200 | 90 | 76 | 10 | 24 | 5.0% | 12.0% |
-| Claude 3.7 Sonnet | 0.1 | 8 | 200 | 89 | 80 | 11 | 20 | 5.5% | 10.0% |
-| Claude 3.7 Sonnet | 0.0 | 10 | 196 | 93 | 75 | 7 | 21 | 3.6% | 10.7% |
-| Claude 3.7 Sonnet | 0.1 | 10 | 196 | 92 | 76 | 8 | 20 | 4.1% | 10.2% |
-| Nova Premier | 0.0 | 4 | 200 | 92 | 85 | 3 | 20 | 1.5% | 10.0% |
-| Nova Premier | 0.1 | 4 | 200 | 92 | 82 | 3 | 23 | 1.5% | 11.5% |
-| Nova Premier | 0.0 | 6 | 200 | 93 | 82 | 7 | 18 | 3.5% | 9.0% |
-| Nova Premier | 0.1 | 6 | 200 | 93 | 81 | 7 | 19 | 3.5% | 9.5% |
-| Nova Premier | 0.0 | 8 | 200 | 80 | 80 | 20 | 20 | 10.0% | 10.0% |
-| Nova Premier | 0.1 | 8 | 200 | 80 | 82 | 20 | 18 | 10.0% | 9.0% |
-| Nova Premier | 0.0 | 10 | 196 | 95 | 71 | 5 | 25 | 2.6% | 12.8% |
-| Nova Premier | 0.1 | 10 | 196 | 94 | 70 | 6 | 26 | 3.1% | 13.3% |
-| Nova 2 Lite | 0.0 | 4 | 200 | 70 | 103 | 25 | 2 | 12.5% | 1.0% |
-| Nova 2 Lite | 0.0 | 6 | 200 | 70 | 98 | 30 | 2 | 15.0% | 1.0% |
-| Nova 2 Lite | 0.0 | 8 | 200 | 46 | 100 | 54 | 0 | 27.0% | 0.0% |
-| Nova 2 Lite | 0.0 | 10 | 196 | 73 | 96 | 27 | 0 | 13.8% | 0.0% |
-
-Column definitions:
-- Model: LLM tested
-- Temp: Model temperature used
-- Policies: Number of policies referenced per scenario (complexity measure)
-- Total: Number of scenarios tested
-- TP: True Positives (correctly identified compliant scenarios)
-- TN: True Negatives (correctly identified non-compliant scenarios)
-- FP: False Positives (non-compliant scenarios incorrectly marked as compliant)
-- FN: False Negatives (compliant scenarios incorrectly flagged as violations)
-- FP Rate: FP / (FP + TN) — false alarm rate
-- FN Rate: FN / (FN + TP) — missed violation rate
+**Legend:** TP=True Positive, FP=False Positive, FN=False Negative, TN=True Negative
+FPR = False Positive Rate (FP/(FP+TN)) - False Alarm Rate
+FNR = False Negative Rate (FN/(FN+TP)) - Missed Violation Rate
 
 ## Pricing Comparison
 
