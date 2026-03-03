@@ -436,8 +436,8 @@ Among those models, we see a notable dip in Nova Premier's performance at comple
 ---
 
 ## Confusion Matrix Summary
-| Model & Temp | Complexity 4 |||||||  Complexity 6 |||||||  Complexity 8 |||||||  Complexity 10 ||||||| 
-|---| TP | FP | FN | TN | FPR | FNR | TP | FP | FN | TN | FPR | FNR | TP | FP | FN | TN | FPR | FNR | TP | FP | FN | TN | FPR | FNR |
+| Model & Temp | C4-TP | C4-FP | C4-FN | C4-TN | C4-FPR | C4-FNR | C6-TP | C6-FP | C6-FN | C6-TN | C6-FPR | C6-FNR | C8-TP | C8-FP | C8-FN | C8-TN | C8-FPR | C8-FNR | C10-TP | C10-FP | C10-FN | C10-TN | C10-FPR | C10-FNR |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | **claude 3 7 sonnet** (T=0.0) | 89 | 7 | 16 | 88 | 7.4% | 15.2% | 91 | 8 | 9 | 92 | 8.0% | 9.0% | 76 | 10 | 24 | 90 | 10.0% | 24.0% | 75 | 7 | 21 | 93 | 7.0% | 21.9% |
 | **claude 3 7 sonnet** (T=0.1) | 90 | 6 | 15 | 89 | 6.3% | 14.3% | 92 | 8 | 8 | 92 | 8.0% | 8.0% | 80 | 11 | 20 | 89 | 11.0% | 20.0% | 76 | 8 | 20 | 92 | 8.0% | 20.8% |
 | **claude 4 sonnet** (T=0.0) | 84 | 5 | 21 | 90 | 5.3% | 20.0% | 69 | 11 | 31 | 89 | 11.0% | 31.0% | 70 | 12 | 30 | 88 | 12.0% | 30.0% | 52 | 5 | 44 | 95 | 5.0% | 45.8% |
@@ -451,9 +451,8 @@ Among those models, we see a notable dip in Nova Premier's performance at comple
 | **nova premier** (T=0.0) | 85 | 3 | 20 | 92 | 3.2% | 19.0% | 82 | 7 | 18 | 93 | 7.0% | 18.0% | 80 | 20 | 20 | 80 | 20.0% | 20.0% | 71 | 5 | 25 | 95 | 5.0% | 26.0% |
 | **nova premier** (T=0.1) | 82 | 3 | 23 | 92 | 3.2% | 21.9% | 81 | 7 | 19 | 93 | 7.0% | 19.0% | 82 | 20 | 18 | 80 | 20.0% | 18.0% | 70 | 6 | 26 | 94 | 6.0% | 27.1% |
 
-**Legend:** TP=True Positive, FP=False Positive, FN=False Negative, TN=True Negative
-FPR = False Positive Rate (FP/(FP+TN)) - False Alarm Rate
-FNR = False Negative Rate (FN/(FN+TP)) - Missed Violation Rate
+**Legend:** C=Complexity, TP=True Positive, FP=False Positive, FN=False Negative, TN=True Negative
+FPR = False Positive Rate (FP/(FP+TN)), FNR = False Negative Rate (FN/(FN+TP))
 
 
 ## Pricing Comparison
