@@ -422,6 +422,11 @@ Risk Quantification
 ---
 ![Confusion Matrix Analysis](/images/unweighted_confusion_matrix_analysis.png)
 
+In this analysis, false positives and false negatives are treated equally when evaluating model performance.  Our top 3 performers overall are Claude 3.7 Sonnet, Claude Opus 4.5, and Nova Premier.
+Among those models, we see a notable dip in Nova Premier's performance at complexity 8 (8 policies per scenario).  Interestingly, at the even higher complexity of 10, Nova Premier's performance rebounds.
+
+
+
 ---
 ![Confusion Matrix Analysis](/images/weighted_confusion_matrix_analysis.png)
 
