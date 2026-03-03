@@ -417,10 +417,16 @@ Risk Quantification
 - Weighted false positve rate to quantify missed violation (i.e. indicating a scenario is compliant when it is not)
 - Confusion matrix analysis for error pattern identification
 
-# LLM Compliance Evaluation Analysis
+# LLM Performance
 
 ---
-![Confusion Matrix Analysis](/images/confusion_matrix_analysis.png)
+![Confusion Matrix Analysis](/images/unweighted_confusion_matrix_analysis.png)
+
+---
+![Confusion Matrix Analysis](/images/weighted_confusion_matrix_analysis.png)
+
+---
+![Confusion Matrix Analysis](/images/model_performance_by_complexity.png)
 
 ---
 
