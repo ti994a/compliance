@@ -427,10 +427,10 @@ For this project:
  - False negative: the judged scenario is compliant, but the model incorrectly judged it as non-compliant.
 
 ---
+
+## Unweighted Model Performance
+
 ![Confusion Matrix Analysis](/images/unweighted_confusion_matrix_analysis.png)
-
-
-## Unweighted Model Performance: What the Data Reveals
 
 When false positives and false negatives carry equal weight — a useful baseline before applying compliance-specific risk adjustments — the six models tested fall into two distinct tiers, with some intersting results.
 
@@ -478,10 +478,10 @@ In considering unweighted model performance at each model's best performing temp
 One of the clearest cross-model findings is that scenarios referencing 8 policies (C8) represent the performance floor for most models tested. Accuracy is at or near its worst at this complexity level before either stabilizing or, in Nova Premier's case, good recovery at C10.
 
 ---
-![Confusion Matrix Analysis](/images/weighted_confusion_matrix_analysis.png)
-
 
 ## Weighted Model Performance
+
+![Confusion Matrix Analysis](/images/weighted_confusion_matrix_analysis.png)
 
 The unweighted analysis treats all errors equally. But in a real compliance workflow, not all errors are created equal. Incorrectly clearing a non-compliant scenario — a false positive — carries meaningfully greater organizational risk than flagging a compliant one. A missed violation can go undetected, potentially exposing the organization to audit findings, regulatory penalties, or unmitigated security risk. An over-flagged compliant scenario, by contrast, generates unnecessary remediation work.
 
@@ -513,13 +513,13 @@ The full ranked results across all model and temperature combinations are:
 
 **Claude 3.7 Sonnet** retains the top spot under weighted scoring, with its T=0.1 configuration edging out T=0.0 by a narrow margin. The key driver is its consistently low false positive rate across all complexity levels — a profile that holds up well under a scoring scheme that penalizes false positives twice as heavily.
 
-**Claude Opus 4.5** finishes a close second, with its T=0.0 configuration performing best. Its low FPR at C4 and C8 is a genuine strength under weighted scoring. The model's cliff at C10 — where FNR jumps to 17.9% — is less damaging under this scheme than it would be if false negatives were weighted equally, because the penalty for missing a violation is relatively lower. That said, a 17.9% miss rate at high complexity remains a meaningful operational concern.
+**Claude Opus 4.5** maintains second, with its T=0.0 configuration performing best. Its low FPR at C4 and C8 is a genuine strength under weighted scoring. The model's cliff at C10 — where FNR jumps to 17.9% — is less damaging under this scheme than it would be if false negatives were weighted equally, because the penalty for missing a violation is relatively lower. That said, a 17.9% miss rate at high complexity remains a meaningful operational concern.
 
 **Nova Premier** holds its third-place position from the unweighted analysis, with average weighted scores of 80.8 (T=0.0) and 80.2 (T=0.1). Its standout characteristic under weighted scoring is its exceptionally low FPR at C4 (1.5%) and C6 (3.5%) — the lowest of any model tested at those complexity levels. The C8 performance dip (FPR spikes to 10%) is more costly under weighted scoring than it appeared in the unweighted view, and it remains the most notable anomaly in the dataset.
 
-### The Reordering: Nova 2 Lite Rises, Claude 4 Sonnet Falls
+### The Underperformers
 
-The most striking shift between unweighted and weighted results is the **rise of Nova 2 Lite**. Under equal weighting, Nova 2 Lite ranked near the bottom due to its extreme false positive bias (FPR of 24–54%). Under weighted scoring — where false positives are penalized twice as heavily — this bias should, in theory, hurt it even more. And yet Nova 2 Lite scores 82.4, *above* both Claude 4 Sonnet configurations.
+The most striking shift between unweighted and weighted results is the **rise of Nova 2 Lite**. Under equal weighting, Nova 2 Lite ranked near the bottom due to its extreme false positive bias. Under weighted scoring — where false positives are penalized twice as heavily — this bias should, in theory, hurt it even more. And yet Nova 2 Lite scores 82.4, *above* both Claude 4 Sonnet configurations.
 
 The explanation lies in Nova 2 Lite's near-zero false negative rate (0–3%). Under the weighted formula, its FNs contribute almost nothing to the penalty, while its FPs — though high — are partially offset by the fact that it almost never misses a real violation. This creates a counterintuitive result: a model with a severe false positive bias can still score reasonably well under a formula that penalizes FPs more, if its FN rate is low enough to compensate.
 
@@ -553,54 +553,15 @@ The figure presents two side-by-side line charts — one for best unweighted sco
 
 Flat lines indicate robustness — a model that reasons about compliance with equal reliability whether a scenario references 4 policies or 10. Steep downward slopes indicate fragility — a model whose accuracy erodes meaningfully as the number of policies it must synthesize increases. And non-monotonic patterns — dips followed by recoveries — suggest something more complex is happening in how the model processes context at different scales.
 
-### The Stable Performers: Claude 3.7 Sonnet and Claude Opus 4.5
-
-The two models that topped both the unweighted and weighted rankings hold their positions here, and the chart reveals *why*: their lines are the flattest in the visualization.
-
-**Claude 3.7 Sonnet** traces the most consistent path across all four complexity levels in both panels. Its line descends gradually from C4 to C10 without dramatic inflection points, confirming what the aggregate scores suggested: this model's accuracy degrades predictably and proportionally as complexity increases. For teams designing compliance workflows that must handle a wide range of scenario types, this predictability is operationally valuable — you can reason about expected performance at any complexity level without worrying about sudden capability cliffs.
-
-**Claude Opus 4.5** tracks closely with Claude 3.7 Sonnet through C4–C8, with lines that are nearly parallel in the mid-complexity range. The divergence becomes visible at C10, where Claude Opus 4.5's line drops more steeply — the cliff effect identified in the previous sections is clearly visible here as a sharper downward slope in the final segment. In the weighted panel, this drop is somewhat less pronounced, consistent with the earlier finding that the weighted formula partially offsets high FNR by penalizing FP more heavily.
-
-### The Anomaly: Nova Premier's C8 Dip
-
-The most visually distinctive pattern in the chart belongs to **Nova Premier**. Rather than a smooth descent, its line shows a clear V-shape: strong performance at C4 and C6, a meaningful dip at C8, and a partial recovery at C10. This non-monotonic pattern is unique among the six models tested and stands out immediately in both panels.
-
-As noted in the weighted analysis, Nova Premier's FPR spikes at C8 — the point at which its performance is most costly under the weighted scoring formula. The recovery at C10 is genuine but incomplete: Nova Premier does not return to its C6 performance level. The practical implication is that workflows generating a high proportion of C8-equivalent scenarios — those requiring synthesis across 8 policies — should treat Nova Premier's performance estimates with additional caution and consider supplementary human review at that complexity tier.
-
-### The Declining Models: Claude 4 Sonnet and Nova 2 Pro
-
-**Claude 4 Sonnet** shows a steeper and more consistent downward slope than either of the top-tier Claude models, with the most pronounced drop occurring between C6 and C10. The chart makes visually explicit what the aggregate scores implied: this model's performance gap relative to Claude 3.7 Sonnet widens as complexity increases. At C4, the two models are relatively close; by C10, the separation is substantial. This pattern reinforces the earlier finding that model recency is not a reliable predictor of compliance reasoning capability — and the chart makes that divergence impossible to miss.
-
-**Nova 2 Pro** occupies the bottom of both panels across nearly every complexity level, with a line that descends steeply and does not recover. Its combination of high FNR and moderate FPR — neither accurate nor conservative — produces the weakest complexity-adjusted profile in the dataset. The chart confirms that Nova 2 Pro's underperformance is not a complexity-specific phenomenon: it is consistently the weakest model at every level tested.
-
-### The Outlier: Nova 2 Lite's Reordering Under Weighted Scoring
-
-One of the most instructive comparisons between the two panels involves **Nova 2 Lite**. In the unweighted panel, its line sits near the bottom of the chart — a reflection of its extreme false positive bias (FPR of 24–54%) dragging down its equal-weight score. In the weighted panel, its line rises noticeably relative to the other models, crossing above Claude 4 Sonnet and approaching Nova Premier at several complexity levels.
-
-This visual reordering makes concrete the statistical argument from the weighted analysis: Nova 2 Lite's near-zero FNR (0–3%) partially compensates for its high FPR under a formula that penalizes false positives more heavily. The chart allows you to see this tradeoff play out across complexity levels simultaneously — Nova 2 Lite's weighted line is relatively flat, because its FNR advantage is consistent regardless of complexity, even as its FPR disadvantage fluctuates.
-
 ### The Takeaway: Complexity Is a First-Class Design Variable
 
-Taken together, the two panels make a clear case that **complexity is not a secondary consideration in model selection — it is a first-class design variable**. The models that perform best in aggregate are not always the models that perform best at the specific complexity level your workflow will encounter most frequently. Nova Premier's C8 anomaly, Claude Opus 4.5's C10 cliff, and Claude 4 Sonnet's widening gap at high complexity are all patterns that aggregate scores obscure but the complexity chart makes visible.
-
-For practitioners, the practical guidance is straightforward: before selecting a model for a compliance workflow, characterize the typical complexity distribution of your scenarios — how many policies does a representative scenario reference? — and use the complexity-adjusted performance curves, not just the aggregate rankings, to inform your decision.
-
-
-
-
-
+Taken together, the two panels make a clear case that complexity is not a secondary consideration in model selection — it is a first-class design variable. The models that perform best in aggregate are not always the models that perform best at the specific complexity level your workflow will encounter most frequently.  For practitioners, the practical guidance is straightforward: before selecting a model for a compliance workflow, characterize the typical complexity distribution of your scenarios — how many policies does a representative scenario reference?
 
 ## Conclusion: Choosing the Right LLM for NIST Compliance Automation
 
-The results of this evaluation offer a nuanced picture of how six leading LLMs perform on NIST SP 800-53 compliance reasoning tasks. Across 1,000 labeled compliance scenarios, four complexity levels, two temperature configurations, and three distinct scoring lenses — unweighted accuracy, weighted risk-adjusted scoring, and complexity-adjusted performance curves — meaningful differences emerge in accuracy, failure modes, cost, and robustness. The right model for any given deployment will depend on the specific risk posture, complexity distribution, and budget constraints of the organization.
+The results of this evaluation offer a nuanced picture of how six leading LLMs perform on NIST SP 800-53 compliance reasoning tasks. Across nearly 800 labeled compliance scenarios, four complexity levels, two temperature configurations, and three distinct scoring lenses — unweighted accuracy, weighted risk-adjusted scoring, and performance curves — meaningful differences emerge in accuracy, failure modes, cost, and robustness. The right model for any given deployment will depend on the specific risk posture, complexity distribution, and budget constraints of the organization.
 
-### Understanding the Scorecard
-
-Before diving into results, it helps to understand what each metric in the table below is measuring — and why it matters.
-
-**Weighted scoring** is the primary lens for this evaluation. In a compliance context, not all errors carry equal weight. Incorrectly clearing a non-compliant scenario — a *false positive* — is more dangerous than flagging a compliant one, because a missed violation can go undetected and expose the organization to real risk. The weighted score formula penalizes false positives at twice the rate of false negatives: `100 − ((2 × FP + FN) / Total × 100)`. A score of 100 would mean zero errors; a score of 0 would mean every judgment was wrong.
-
-**Scenario complexity** refers to how many organizational policies a model must read and reason across simultaneously to reach a compliance judgment. Scenarios in this evaluation reference 4, 6, 8, or 10 policies (labeled C4 through C10). More policies mean more context to synthesize — and more opportunity for a model to make mistakes.
+### Scorecard
 
 The five columns in the table each tell a different part of the story:
 
@@ -609,8 +570,6 @@ The five columns in the table each tell a different part of the story:
 - **Worst Weighted Score (Single Complexity)** — The lowest score the model achieved at any single complexity level. *This is the model's floor — its worst-case performance.* A low floor means the model can fail badly under certain conditions, even if its average looks acceptable.
 - **Complexity Robustness (point drop)** — The difference between the best and worst single-complexity scores. *This measures how much the model degrades as scenarios get harder.* A small drop means the model performs consistently regardless of complexity; a large drop means it struggles when asked to reason across many policies at once.
 - **Input / Output Price** — The cost per million tokens processed. *This is the direct cost lever* — the price you pay per unit of work, independent of accuracy.
-
-### The Price/Performance Summary
 
 | Model (Best Temp) | Weighted Score (Avg) | Best Weighted Score (Single Complexity) | Worst Weighted Score (Single Complexity) | Complexity Robustness (point drop) | Input Price (per 1M tokens) | Output Price (per 1M tokens) |
 |---|---|---|---|---|---|---|
@@ -625,23 +584,9 @@ The five columns in the table each tell a different part of the story:
 
 *Pricing: US East (N. Virginia), Standard Tier/Non-Batch, Geo cross-region inference and in-region. Nova 2 Pro pricing pending general availability. Weighted score formula: 100 − ((2 × FP + FN) / Total × 100), where false positives are penalized at 2× the rate of false negatives.*
 
-### The Top Tier: Accuracy and Consistency
-
-**Claude 3.7 Sonnet (T=0.1)** achieves the highest average weighted score (83.8) and the tightest performance range of the top three models — a floor of 79.0 and a ceiling of 88.0, with only a 9.0-point spread across all complexity levels. For executives, this translates to predictability: the model behaves consistently whether scenarios are simple or complex. 
-
-**Claude Opus 4.5 (T=0.0)** achieves the highest single-complexity peak of any model tested (88.5 at C4) and excels through mid-complexity scenarios, reaching 86.0 at C8 — the highest C8 score in the evaluation. However, it hits a notable cliff at C10, where its score drops to 74.0, producing a 14.5-point robustness gap. At $5.50 per million input tokens — 83% more than Claude 3.7 Sonnet — the premium is difficult to justify unless minimizing missed violations at lower complexity levels is the overriding priority.
-
-**Nova Premier (T=0.0)** rounds out the top tier with an average weighted score of 80.8 and the lowest input price of the top three at $2.50 per million tokens. Its peak score of 87.0 at C4 is competitive with the top Claude models. The headline concern is its C8 floor of 70.0 — the lowest worst-case score in the top tier — driven by a spike in false positives at that complexity level before partially recovering at C10. For executives: Nova Premier is a strong value option for workflows where most scenarios reference fewer than 8 policies, but teams should plan for additional human review at the 8-policy complexity tier. As a fully Amazon-native model, it also benefits from the tightest integration with the broader AWS ecosystem.
-
 ### A Note on Claude 4 Sonnet
 
 **Claude 4 Sonnet (T=0.1)** scores 76.6 on the weighted scale — meaningfully below both Claude 3.7 Sonnet and Claude Opus 4.5, despite carrying the same price tag as Claude 3.7 Sonnet ($3.00 per million input tokens). Its peak of 81.0 and floor of 74.0 reflect a model that underperforms its predecessor at every complexity level. Its 7.0-point robustness gap is the smallest of any model tested, but this reflects a consistently moderate performance profile rather than genuine resilience: its floor of 74.0 is lower than Claude 3.7 Sonnet's floor of 79.0, despite the smaller spread. For executives: at the same price as Claude 3.7 Sonnet, Claude 4 Sonnet delivers less accuracy. This finding is a direct challenge to the assumption that a newer model generation automatically means better performance on specialized tasks.
-
-### The Specialized Cases: Nova 2 Lite and Nova 2 Pro
-
-**Nova 2 Lite (T=0.1)** presents the most extreme tradeoff in the dataset. Its average weighted score of 65.6 and worst-case floor of 46.0 at C8 reflect a model with a severe false positive bias — it flags a large share of compliant scenarios as violations. The 29.5-point robustness gap is the largest in the evaluation. For executives: this model almost never misses a real violation, but it generates a high volume of false alarms — meaning compliance teams would spend significant time investigating issues that turn out to be non-problems. At $0.33 per million input tokens — roughly 9× cheaper than Claude 3.7 Sonnet — Nova 2 Lite is best suited as a **first-pass screening layer** in a multi-stage pipeline, where its high recall can be leveraged and its false positive rate filtered by a more precise model downstream. It should not be used as a standalone compliance judge.
-
-**Nova 2 Pro (T=0.0)** finishes last in average weighted score (65.4), with a floor of 53.0 at C8 and a 20.5-point robustness gap. For executives: this model misses a significant share of real violations while also generating false alarms — the worst of both failure modes simultaneously. Pricing is pending general availability, but performance results alone make it difficult to recommend for compliance-critical workflows in its current form.
 
 ### Design Principles for Production Compliance Workflows
 
@@ -663,18 +608,7 @@ The core finding, however, is durable: **rigorous, task-specific evaluation is t
 
 ---
 
-*To explore the models evaluated in this post, visit [Amazon Bedrock](https://aws.amazon.com/bedrock/). To build and run evaluation pipelines like this one, see [Amazon SageMaker Unified Studio](https://aws.amazon.com/sagemaker/). For guidance on NIST SP 800-53 compliance on AWS, visit the [AWS Compliance Center](https://aws.amazon.com/compliance/programs/).*
-
-
-
-
-
-
-
-
----
-
-## Confusion Matrix Summary
+## Appendix: Confusion Matrix Summary
 | Model & Temp | C4-TP | C4-FP | C4-FN | C4-TN | C4-FPR | C4-FNR | C6-TP | C6-FP | C6-FN | C6-TN | C6-FPR | C6-FNR | C8-TP | C8-FP | C8-FN | C8-TN | C8-FPR | C8-FNR | C10-TP | C10-FP | C10-FN | C10-TN | C10-FPR | C10-FNR |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | **claude 3 7 sonnet** (T=0.0) | 89 | 7 | 16 | 88 | 7.4% | 15.2% | 91 | 8 | 9 | 92 | 8.0% | 9.0% | 76 | 10 | 24 | 90 | 10.0% | 24.0% | 75 | 7 | 21 | 93 | 7.0% | 21.9% |
@@ -693,8 +627,9 @@ The core finding, however, is durable: **rigorous, task-specific evaluation is t
 **Legend:** C=Complexity, TP=True Positive, FP=False Positive, FN=False Negative, TN=True Negative
 FPR = False Positive Rate (FP/(FP+TN)), FNR = False Negative Rate (FN/(FN+TP))
 
+---
 
-## Pricing Comparison
+## Appendix: Model Pricing
 
 | Model | Price per 1M Input Tokens | Price per 1M Output Tokens |
 |---|---|---|
@@ -708,20 +643,4 @@ Pricing for Amazon Nova 2 Pro is pending general availability.
 
 *US East (N. Virginia), Standard Tier/Non-Batch, Geo cross-region inference and in-region*
 
-## Key Observations
-
-Impact of Scenario Complexity:
-- All models show degraded performance as policy count increases from 4 to 10
-- False negative rates increase significantly at 10 policies per scenario
-- Claude 4 Sonnet shows largest degradation (10.5% FN at 4 policies vs 22.4% at 10 policies)
-
-Temperature Effect:
-- Minimal impact on error rates for most models
-- Claude 4 Sonnet shows slight improvement at temp=0.1 for higher complexity scenarios
-
-Nova 2 Lite Behavior:
-- Exhibits strong bias toward predicting "compliant" (near-zero false negatives)
-- High false positive rates (12.5% - 27.0%) indicate poor violation detection
-- Not recommended for compliance workloads requiring violation identification
-- Temperature of 0.1 was not pursed due to poor performance at 0.0
 
