@@ -417,7 +417,7 @@ Risk Quantification
 - Weighted false positve rate to quantify missed violation (i.e. indicating a scenario is compliant when it is not)
 - Confusion matrix analysis for error pattern identification
 
-# LLM Performance
+# LLM Performance Results
 
 ## False Positives and False Negatives
 
@@ -485,11 +485,11 @@ One of the clearest cross-model findings is that scenarios referencing 8 policie
 
 The unweighted analysis treats all errors equally. But in a real compliance workflow, not all errors are created equal. Incorrectly clearing a non-compliant scenario — a false positive — carries meaningfully greater organizational risk than flagging a compliant one. A missed violation can go undetected, potentially exposing the organization to audit findings, regulatory penalties, or unmitigated security risk. An over-flagged compliant scenario, by contrast, generates unnecessary remediation work.
 
-To reflect this asymmetry, the weighted scoring formula penalizes false positives at **2× the rate of false negatives**: `Weighted Score = 100 - ((2 × FP + FN) / Total × 100)`. The results under this scoring scheme reveal a somewhat different picture without affecting the overal unweighted leader and underperformer rankings.
+To reflect this asymmetry, the weighted scoring formula penalizes false positives at **2× the rate of false negatives**: `Weighted Score = 100 - ((2 × FP + FN) / Total × 100)`; incorrectly flagging violations as compliant scenarios is considered risky and therefore costlier than incorrectly flagging compliant scenarios as non-compliant.
 
 ### Weighted Scoring Summary
 
-Weighted scores are calculated as 100 - ((2*FP + FN) / total * 100), penalizing false positives twice as much as false negatives since incorrectly flagging compliant scenarios as violations is considered more costly than missing actual violations. This reflects real-world compliance scenarios where false alarms can waste resources and create unnecessary remediation work.
+The results under this scoring scheme reveal a somewhat different picture without affecting the overal unweighted leader rankings.  Claude 4 Sonnet and Nova 2 Lite do switch places with weighting applied.  Additionally, the worst performers are penalized more due to having a proportionately higher number of false positives.
 
 The full ranked results across all model and temperature combinations are:
 
@@ -513,31 +513,17 @@ The full ranked results across all model and temperature combinations are:
 
 **Claude 3.7 Sonnet** retains the top spot under weighted scoring, with its T=0.1 configuration edging out T=0.0 by a narrow margin. The key driver is its consistently low false positive rate across all complexity levels — a profile that holds up well under a scoring scheme that penalizes false positives twice as heavily.
 
-**Claude Opus 4.5** maintains second, with its T=0.0 configuration performing best. Its low FPR at C4 and C8 is a genuine strength under weighted scoring. The model's cliff at C10 — where FNR jumps to 17.9% — is less damaging under this scheme than it would be if false negatives were weighted equally, because the penalty for missing a violation is relatively lower. That said, a 17.9% miss rate at high complexity remains a meaningful operational concern.
+**Claude Opus 4.5** maintains second, with its T=0.0 configuration performing best. Its low FPR at C4 and C8 is a genuine strength under weighted scoring.
 
 **Nova Premier** holds its third-place position from the unweighted analysis, with average weighted scores of 80.8 (T=0.0) and 80.2 (T=0.1). Its standout characteristic under weighted scoring is its exceptionally low FPR at C4 (1.5%) and C6 (3.5%) — the lowest of any model tested at those complexity levels. The C8 performance dip (FPR spikes to 10%) is more costly under weighted scoring than it appeared in the unweighted view, and it remains the most notable anomaly in the dataset.
 
 ### The Underperformers
 
-The most striking shift between unweighted and weighted results is the **rise of Nova 2 Lite**. Under equal weighting, Nova 2 Lite ranked near the bottom due to its extreme false positive bias. Under weighted scoring — where false positives are penalized twice as heavily — this bias should, in theory, hurt it even more. And yet Nova 2 Lite scores 82.4, *above* both Claude 4 Sonnet configurations.
-
-The explanation lies in Nova 2 Lite's near-zero false negative rate (0–3%). Under the weighted formula, its FNs contribute almost nothing to the penalty, while its FPs — though high — are partially offset by the fact that it almost never misses a real violation. This creates a counterintuitive result: a model with a severe false positive bias can still score reasonably well under a formula that penalizes FPs more, if its FN rate is low enough to compensate.
-
-This is an important nuance for practitioners: **weighted scoring does not simply punish false-positive-heavy models more**. It rebalances the tradeoff. Nova 2 Lite's profile — high FPR, near-zero FNR — produces a different weighted score than its unweighted score might suggest.
-
-**Claude 4 Sonnet**, by contrast, falls further under weighted scoring. Its relatively high FNR at C10 (43–46%) is penalized at the standard 1× rate, but its FPR is low enough that it doesn't benefit from the weighting the way Nova 2 Lite does. The result is a model that performs poorly on both dimensions without the compensating advantage of near-zero false negatives.
-
-**Nova 2 Pro** remains at the bottom of the rankings under both scoring schemes, with weighted averages of 70.9 and 70.6. Its combination of high FNR (30–53%) and moderate FPR produces the worst overall profile regardless of how errors are weighted.
+The most noticeable shift between unweighted and weighted results is the relative rise of Claude 4 Sonnet.
 
 ### What This Means for System Design
 
 The weighted results reinforce the top-line recommendation from the unweighted analysis — **Claude 3.7 Sonnet is the most reliable choice for production compliance workflows** — but they add important nuance:
-
-- **If minimizing false positives is your primary constraint** (e.g., you have limited capacity for human review of flagged scenarios), Claude 3.7 Sonnet and Nova Premier at lower complexity levels offer the best FPR profiles.
-- **If minimizing false negatives is your primary constraint** (e.g., you are operating in a high-stakes regulatory environment where missed violations are unacceptable), Claude Opus 4.5 at C4–C8 offers the lowest FNR of any model tested — but plan for human review at C10.
-- **Nova 2 Lite's near-zero FNR** makes it a candidate for a first-pass screening layer in a multi-stage pipeline, where its high false positive rate can be filtered by a more precise model downstream. It should not be used as a standalone compliance judge.
-- **Avoid Nova 2 Pro** in any compliance-critical workflow. Its combination of high FNR and moderate FPR produces the weakest risk profile under any scoring scheme.
-
 
 ---
 ![Confusion Matrix Analysis](/images/model_performance_by_complexity.png)
@@ -552,10 +538,6 @@ The unweighted and weighted scoring analyses in the previous sections aggregate 
 The figure presents two side-by-side line charts — one for best unweighted scores, one for best weighted scores — each plotting all six models across the four complexity levels: C4 (4 policies per scenario), C6, C8, and C10. Each model is represented as a labeled line with markers at each complexity point, using its best-performing temperature configuration. The shape of each line tells a story that aggregate scores alone cannot.
 
 Flat lines indicate robustness — a model that reasons about compliance with equal reliability whether a scenario references 4 policies or 10. Steep downward slopes indicate fragility — a model whose accuracy erodes meaningfully as the number of policies it must synthesize increases. And non-monotonic patterns — dips followed by recoveries — suggest something more complex is happening in how the model processes context at different scales.
-
-### The Takeaway: Complexity Is a First-Class Design Variable
-
-Taken together, the two panels make a clear case that complexity is not a secondary consideration in model selection — it is a first-class design variable. The models that perform best in aggregate are not always the models that perform best at the specific complexity level your workflow will encounter most frequently.  For practitioners, the practical guidance is straightforward: before selecting a model for a compliance workflow, characterize the typical complexity distribution of your scenarios — how many policies does a representative scenario reference?
 
 ## Conclusion: Choosing the Right LLM for NIST Compliance Automation
 
@@ -590,42 +572,39 @@ The five columns in the table each tell a different part of the story:
 
 ### Design Principles for Production Compliance Workflows
 
-This evaluation surfaces several principles that should inform how teams architect AI-assisted compliance systems on AWS:
-
-**Match model selection to your complexity distribution.** The number of policies a scenario must reference is a first-class predictor of model accuracy. Before selecting a model, characterize the typical complexity of your scenarios and use the Best and Worst Weighted Score columns — not just the average — to understand each model's performance range at the complexity levels your workflow will encounter most frequently.
+This evaluation surfaces principles that should inform how teams architect AI-assisted compliance systems on AWS:
 
 **Treat false positives and false negatives as asymmetric risks.** The weighted scoring results diverge meaningfully from equal-weight accuracy, and the right balance depends on your organization's specific risk posture. A team with limited capacity for human review should optimize for low false positive rates; a team operating under strict regulatory scrutiny should optimize for low false negative rates. The weighted score formula used here — penalizing false positives at 2× — reflects one reasonable calibration, but organizations should validate this weighting against their own compliance risk model.
 
-**Consider multi-stage architectures for cost-sensitive deployments.** Nova 2 Lite's near-zero false negative rate at a fraction of the cost of frontier models makes it a viable first-pass filter. A pipeline that uses Nova 2 Lite to flag potential violations and Claude 3.7 Sonnet or Nova Premier to adjudicate flagged cases could achieve near-top-tier accuracy at significantly lower per-scenario cost.
-
 **Don't assume newer means better for specialized tasks.** Claude 4 Sonnet's underperformance relative to Claude 3.7 Sonnet at the same price point is a finding that generalizes beyond this specific evaluation: compliance reasoning is a specialized capability that requires targeted benchmarking. General-purpose model benchmarks are not a substitute for task-specific evaluation.
+
+**Model performance does not decline steadily as scenario complexity increases.**  Four of the six models tested saw their worst performance at complexity level 8, with an increase at complexity level 10.
 
 ### Looking Ahead
 
-This framework is designed to evolve alongside the models it evaluates. As Amazon Bedrock continues to expand its model catalog — and as Amazon Nova 2 Pro reaches general availability with published pricing — the pipeline can be extended to incorporate new entrants without modification to the core evaluation architecture. Future work will explore fine-tuning approaches for models that show systematic failure modes at high complexity, expanded scenario coverage across additional NIST control families, and cost modeling that accounts for full token consumption across multi-turn compliance workflows.
-
-The core finding, however, is durable: **rigorous, task-specific evaluation is the only reliable basis for model selection in compliance-critical AI applications.** The differences between models in this evaluation — in accuracy, in failure modes, in cost, and in how performance degrades with complexity — are large enough to have real operational and financial consequences. The framework described in this post provides a reproducible, extensible methodology for making those differences visible.
+This framework is designed to be evolve alongside the models it evaluates, and the pipeline can be extended to incorporate additional entrants without modification to the core evaluation architecture.  The core finding, however, is that rigorous, task-specific evaluation is the only reliable basis for model selection in compliance-critical AI applications.  The differences between models in this evaluation — in accuracy, in failure modes, in cost, and in how performance degrades with complexity — are large enough to have real operational and financial consequences. The framework described in this post provides a reproducible, extensible methodology for making those differences visible.
 
 ---
 
 ## Appendix: Confusion Matrix Summary
-| Model & Temp | C4-TP | C4-FP | C4-FN | C4-TN | C4-FPR | C4-FNR | C6-TP | C6-FP | C6-FN | C6-TN | C6-FPR | C6-FNR | C8-TP | C8-FP | C8-FN | C8-TN | C8-FPR | C8-FNR | C10-TP | C10-FP | C10-FN | C10-TN | C10-FPR | C10-FNR |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| **claude 3 7 sonnet** (T=0.0) | 89 | 7 | 16 | 88 | 7.4% | 15.2% | 91 | 8 | 9 | 92 | 8.0% | 9.0% | 76 | 10 | 24 | 90 | 10.0% | 24.0% | 75 | 7 | 21 | 93 | 7.0% | 21.9% |
-| **claude 3 7 sonnet** (T=0.1) | 90 | 6 | 15 | 89 | 6.3% | 14.3% | 92 | 8 | 8 | 92 | 8.0% | 8.0% | 80 | 11 | 20 | 89 | 11.0% | 20.0% | 76 | 8 | 20 | 92 | 8.0% | 20.8% |
-| **claude 4 sonnet** (T=0.0) | 84 | 5 | 21 | 90 | 5.3% | 20.0% | 69 | 11 | 31 | 89 | 11.0% | 31.0% | 70 | 12 | 30 | 88 | 12.0% | 30.0% | 52 | 5 | 44 | 95 | 5.0% | 45.8% |
-| **claude 4 sonnet** (T=0.1) | 81 | 7 | 24 | 88 | 7.4% | 22.9% | 70 | 10 | 30 | 90 | 10.0% | 30.0% | 77 | 12 | 23 | 88 | 12.0% | 23.0% | 55 | 5 | 41 | 95 | 5.0% | 42.7% |
-| **claude opus 4 5** (T=0.0) | 92 | 5 | 13 | 90 | 5.3% | 12.4% | 92 | 13 | 8 | 87 | 13.0% | 8.0% | 92 | 10 | 8 | 90 | 10.0% | 8.0% | 61 | 8 | 35 | 92 | 8.0% | 36.5% |
-| **claude opus 4 5** (T=0.1) | 91 | 6 | 14 | 89 | 6.3% | 13.3% | 90 | 13 | 10 | 87 | 13.0% | 10.0% | 88 | 11 | 12 | 89 | 11.0% | 12.0% | 65 | 7 | 31 | 93 | 7.0% | 32.3% |
-| **nova 2 lite** (T=0.0) | 103 | 25 | 2 | 70 | 26.3% | 1.9% | 98 | 30 | 2 | 70 | 30.0% | 2.0% | 100 | 54 | 0 | 46 | 54.0% | 0.0% | 96 | 27 | 0 | 73 | 27.0% | 0.0% |
-| **nova 2 lite** (T=0.1) | 102 | 23 | 3 | 72 | 24.2% | 2.9% | 97 | 30 | 3 | 70 | 30.0% | 3.0% | 100 | 54 | 0 | 46 | 54.0% | 0.0% | 96 | 27 | 0 | 73 | 27.0% | 0.0% |
-| **nova 2 pro** (T=0.0) | 72 | 10 | 33 | 85 | 10.5% | 31.4% | 45 | 9 | 55 | 91 | 9.0% | 55.0% | 48 | 21 | 52 | 79 | 21.0% | 52.0% | 48 | 4 | 48 | 96 | 4.0% | 50.0% |
-| **nova 2 pro** (T=0.1) | 73 | 12 | 32 | 83 | 12.6% | 30.5% | 47 | 7 | 53 | 93 | 7.0% | 53.0% | 48 | 23 | 52 | 77 | 23.0% | 52.0% | 45 | 4 | 51 | 96 | 4.0% | 53.1% |
-| **nova premier** (T=0.0) | 85 | 3 | 20 | 92 | 3.2% | 19.0% | 82 | 7 | 18 | 93 | 7.0% | 18.0% | 80 | 20 | 20 | 80 | 20.0% | 20.0% | 71 | 5 | 25 | 95 | 5.0% | 26.0% |
-| **nova premier** (T=0.1) | 82 | 3 | 23 | 92 | 3.2% | 21.9% | 81 | 7 | 19 | 93 | 7.0% | 19.0% | 82 | 20 | 18 | 80 | 20.0% | 18.0% | 70 | 6 | 26 | 94 | 6.0% | 27.1% |
+| Model & Temp | C4-FP% | C4-FN% | C6-FP% | C6-FN% | C8-FP% | C8-FN% | C10-FP% | C10-FN% |
+|---|---|---|---|---|---|---|---|---|
+| **claude 3 7 sonnet** (T=0.0) | 3.5% | 8.0% | 4.0% | 4.5% | 5.0% | 12.0% | 3.6% | 10.7% |
+| **claude 3 7 sonnet** (T=0.1) | 3.0% | 7.5% | 4.0% | 4.0% | 5.5% | 10.0% | 4.1% | 10.2% |
+| **claude 4 sonnet** (T=0.0) | 2.5% | 10.5% | 5.5% | 15.5% | 6.0% | 15.0% | 2.6% | 22.4% |
+| **claude 4 sonnet** (T=0.1) | 3.5% | 12.0% | 5.0% | 15.0% | 6.0% | 11.5% | 2.6% | 20.9% |
+| **claude opus 4 5** (T=0.0) | 2.5% | 6.5% | 6.5% | 4.0% | 5.0% | 4.0% | 4.1% | 17.9% |
+| **claude opus 4 5** (T=0.1) | 3.0% | 7.0% | 6.5% | 5.0% | 5.5% | 6.0% | 3.6% | 15.8% |
+| **nova 2 lite** (T=0.0) | **12.5%** | 1.0% | **15.0%** | 1.0% | **27.0%** | 0.0% | **13.8%** | 0.0% |
+| **nova 2 lite** (T=0.1) | **11.5%** | 1.5% | **15.0%** | 1.5% | **27.0%** | 0.0% | **13.8%** | 0.0% |
+| **nova 2 pro** (T=0.0) | 5.0% | 16.5% | 4.5% | 27.5% | **10.5%** | 26.0% | 2.0% | 24.5% |
+| **nova 2 pro** (T=0.1) | 6.0% | 16.0% | 3.5% | 26.5% | **11.5%** | 26.0% | 2.0% | 26.0% |
+| **nova premier** (T=0.0) | 1.5% | 10.0% | 3.5% | 9.0% | **10.0%** | 10.0% | 2.6% | 12.8% |
+| **nova premier** (T=0.1) | 1.5% | 11.5% | 3.5% | 9.5% | **10.0%** | 9.0% | 3.1% | 13.3% |
 
-**Legend:** C=Complexity, TP=True Positive, FP=False Positive, FN=False Negative, TN=True Negative
-FPR = False Positive Rate (FP/(FP+TN)), FNR = False Negative Rate (FN/(FN+TP))
+**Legend:** C=Complexity, FP%=False Positive %, FN%=False Negative %
+Worst 25% in False Postives are **bolded**
+
 
 ---
 
