@@ -600,4 +600,20 @@ Pricing for Amazon Nova 2 Pro is pending general availability.
 
 *US East (N. Virginia), Standard Tier/Non-Batch, Geo cross-region inference and in-region*
 
+---
 
+# Disclaimer
+
+The code provided herein was created personally by an AWS Technical Account Manager (TAM) and is shared solely for demonstration and educational purposes.
+
+This code is NOT official AWS code, is NOT an AWS product, and does NOT represent the views, recommendations, or endorsements of Amazon Web Services (AWS) or any of its affiliates.
+
+By using this code, you acknowledge and agree to the following:
+
+ - No Warranty: This code is provided "as-is," without warranty of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement.
+ - No Support: AWS and the author provide no support, maintenance, or updates for this code. Use of this code is entirely at your own risk.
+ - Not Production-Ready: This code is intended for demonstration purposes only and has not been tested, reviewed, or validated for use in production environments.
+ - No Liability: In no event shall the author or AWS be liable for any claim, damages, or other liability arising from the use of or inability to use this code.
+ - Security: This code has not undergone a security review. You are solely responsible for evaluating its security implications before use.
+ - Compliance: You are responsible for ensuring that any use of this code complies with all applicable laws, regulations, and AWS service terms.
+ - AWS documentation, official SDKs, and AWS-supported solutions should always be consulted for production workloads. For official guidance, visit https://docs.aws.amazon.com.
