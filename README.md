@@ -449,10 +449,6 @@ Claude models were tested with tool use enabled - specifically a calculator tool
 
 ![Confusion Matrix Analysis](/images/unweighted_confusion_matrix_analysis.png)
 
-When false positives and false negatives carry equal weight — a useful baseline before applying compliance-specific risk adjustments — the six models tested fall into two distinct tiers, with some intersting results.
-
-### Unweighted Scoring Summary
-
 Unweighted scores are calculated as 100 - ((FP + FN) / total * 100), treating false positives and false negatives equally. This provides a balanced view of overall accuracy where both types of errors have equal impact on the final score.
 
 The full ranked results across all model and temperature combinations are:
@@ -472,28 +468,6 @@ The full ranked results across all model and temperature combinations are:
 | **nova 2 pro** (T=0.0) | 78.5% | 68.0% | 63.5% | 73.5% | 70.9% |
 | **nova 2 pro** (T=0.1) | 78.0% | 70.0% | 62.5% | 71.9% | 70.6% |
 
-### The Leaders
-
-In considering unweighted model performance at each model's best performing tempurature:
-
-**Claude 3.7 Sonnet** earns the top spot not by dominating any single metric, but by delivering the most stable performance profile across all four complexity levels. False Positive Rates (FPR) hold steady between 3.0-5.5%, and False Negative Rates (FNR) remain in the 4–10.2% range  as scenario complexity scales from 4 to 10 policies. It displays a gradual, predictable degradation curve that makes it the most operationally reliable choice for teams that need consistent behavior across a wide range of scenario types.
-
-**Claude Opus 4.5** is a strong performer at lower complexity levels. However, it hits a notable cliff at C10: FNR jumps to 17.9%. For organizations whose compliance scenarios are not at the highest complexity levels, Opus 4.5 is a compelling option; for high-complexity assessments, the degradation warrants caution and possibly more investigation.
-
-**Nova Premier** rounds out the top tier with a distinctive profile: the lowest FPR of any model tested (1.5% at C4) and the best FPR performance at both C4 and C6, meaning it is the least likely to pass a non-compliant, low to moderate complexity scenario. Its headline anomaly, however, is a meaningful performance dip at complexity 8 followed by a rebound at complexity 10 — a non-linear pattern not observed in the other models. This behavior is worth investigating further, given the solid performance it displayed overall.
-
-### The Underperformers
-
-**Nova 2 Lite** presents the most extreme failure mode in the dataset. Its maximum FNR is only 1.5% — it almost never flags a legitimate scenarios as a violation — but its FPR goes up to 27%, meaning it flags a large share of non-compliant scenarios as compliant. This represents a significant risk.
-
-**Nova 2 Pro** struggles on both dimensions simultaneously. FPR climbs to 10.5% and its FNR maxes at 27.5%, the second worst and worst results of the group. In unweighted terms, it is the worst performer of the group.
-
-**Claude 4 Sonnet** is perhaps the most counterintuitive result in the dataset. Despite being a newer model than Claude 3.7 Sonnet, it underperforms its predecessor at every complexity level, with FNR climbing steeply to 20.9% at C10. This finding is a direct challenge to the assumption that model recency is a reliable proxy for compliance reasoning capability — a reminder that specialized task performance requires targeted evaluation, not just benchmark comparisons.
-
-### The Complexity Effect: C8 as the Performance Floor
-
-One of the clearest cross-model findings is that scenarios referencing 8 policies (C8) represent the performance floor for most models tested. Accuracy is at or near its worst at this complexity level before either stabilizing or, in Nova Premier's case, good recovery at C10.
-
 ---
 
 ## Weighted Model Performance
@@ -504,13 +478,10 @@ The unweighted analysis treats all errors equally. But in a real compliance work
 
 To reflect this asymmetry, the weighted scoring formula penalizes false positives at **2× the rate of false negatives**: `Weighted Score = 100 - ((2 × FP + FN) / Total × 100)`; incorrectly flagging violations as compliant scenarios is considered risky and therefore costlier than incorrectly flagging compliant scenarios as non-compliant.
 
-### Weighted Scoring Summary
-
-The results under this scoring scheme reveal a somewhat different picture without affecting the overal unweighted leader rankings.  Claude 4 Sonnet and Nova 2 Lite do switch places with weighting applied.  Additionally, the worst performers are penalized more due to having a proportionately higher number of false positives.
+The results under this scoring scheme reveal a somewhat different picture without affecting the overall unweighted leader rankings.  Claude 4 Sonnet and Nova 2 Lite do switch places with weighting applied.  Additionally, the worst performers are penalized more due to having a proportionately higher number of false positives.
 
 The full ranked results across all model and temperature combinations are:
 
-## Weighted Scores
 | Model & Temp | C4 | C6 | C8 | C10 | Average |
 |---|---|---|---|---|---|
 | **claude 3 7 sonnet** (T=0.1) | 86.5% | 88.0% | 79.0% | 81.6% | 83.8% |
@@ -526,41 +497,17 @@ The full ranked results across all model and temperature combinations are:
 | **nova 2 pro** (T=0.0) | 73.5% | 63.5% | 53.0% | 71.4% | 65.4% |
 | **nova 2 pro** (T=0.1) | 72.0% | 66.5% | 51.0% | 69.9% | 64.8% |
 
-### The Leaders
-
-**Claude 3.7 Sonnet** retains the top spot under weighted scoring, with its T=0.1 configuration edging out T=0.0 by a narrow margin. The key driver is its consistently low false positive rate across all complexity levels — a profile that holds up well under a scoring scheme that penalizes false positives twice as heavily.
-
-**Claude Opus 4.5** maintains second, with its T=0.0 configuration performing best. Its low FPR at C4 and C8 is a genuine strength under weighted scoring.
-
-**Nova Premier** holds its third-place position from the unweighted analysis, with average weighted scores of 80.8 (T=0.0) and 80.2 (T=0.1). Its standout characteristic under weighted scoring is its exceptionally low FPR at C4 (1.5%) and C6 (3.5%) — the lowest of any model tested at those complexity levels. The C8 performance dip (FPR spikes to 10%) is more costly under weighted scoring than it appeared in the unweighted view, and it remains the most notable anomaly in the dataset.
-
-### The Underperformers
-
-The most noticeable shift between unweighted and weighted results is the relative rise of Claude 4 Sonnet.
-
-### What This Means for System Design
-
-The weighted results reinforce the top-line recommendation from the unweighted analysis — **Claude 3.7 Sonnet is the most reliable choice for production compliance workflows** — but they add important nuance:
-
 ---
+
+## How Complexity Shapes Model Performance
+
 ![Confusion Matrix Analysis](/images/model_performance_by_complexity.png)
 
+The question of *how* a model degrades as reasoning demands increase is just as important as where it ranks overall. This visualization makes this dynamic clear.
 
-## How Complexity Shapes Model Performance: A Visual Analysis
+The figure presents two side-by-side line charts — one for best unweighted scores, one for best weighted scores — each plotting all six models across the four complexity levels: C4 (4 policies per scenario), C6, C8, and C10. Each model is represented as a labeled line with markers at each complexity point, using its best-performing temperature configuration.  Flat lines indicate robustness — a model that reasons about compliance with equal reliability whether a scenario references 4 policies or 10. Steep downward slopes indicate fragility — a model whose accuracy erodes meaningfully as the number of policies it must synthesize increases. And non-monotonic patterns — dips followed by recoveries — suggest something more complex is happening in how the model processes context at different scales.
 
-The unweighted and weighted scoring analyses in the previous sections aggregate performance across all complexity levels into a single ranked score. But compliance scenarios are not uniform — and the question of *how* a model degrades as reasoning demands increase is just as important as where it ranks overall. The `model_performance_by_complexity.png` visualization makes this dynamic visible.
-
-### Reading the Chart
-
-The figure presents two side-by-side line charts — one for best unweighted scores, one for best weighted scores — each plotting all six models across the four complexity levels: C4 (4 policies per scenario), C6, C8, and C10. Each model is represented as a labeled line with markers at each complexity point, using its best-performing temperature configuration. The shape of each line tells a story that aggregate scores alone cannot.
-
-Flat lines indicate robustness — a model that reasons about compliance with equal reliability whether a scenario references 4 policies or 10. Steep downward slopes indicate fragility — a model whose accuracy erodes meaningfully as the number of policies it must synthesize increases. And non-monotonic patterns — dips followed by recoveries — suggest something more complex is happening in how the model processes context at different scales.
-
-## Conclusion: Choosing the Right LLM for NIST Compliance Automation
-
-The results of this evaluation offer a nuanced picture of how six leading LLMs perform on NIST SP 800-53 compliance reasoning tasks. Across nearly 800 labeled compliance scenarios, four complexity levels, two temperature configurations, and three distinct scoring lenses — unweighted accuracy, weighted risk-adjusted scoring, and performance curves — meaningful differences emerge in accuracy, failure modes, cost, and robustness. The right model for any given deployment will depend on the specific risk posture, complexity distribution, and budget constraints of the organization.
-
-### Scorecard
+## Price/Performance Scorecard
 
 The five columns in the table each tell a different part of the story:
 
@@ -583,9 +530,57 @@ The five columns in the table each tell a different part of the story:
 
 *Pricing: US East (N. Virginia), Standard Tier/Non-Batch, Geo cross-region inference and in-region. Nova 2 Pro pricing pending general availability. Weighted score formula: 100 − ((2 × FP + FN) / Total × 100), where false positives are penalized at 2× the rate of false negatives.*
 
-### A Note on Claude 4 Sonnet
+## Conclusion: Choosing the Right LLM for NIST Compliance Automation
 
-**Claude 4 Sonnet (T=0.1)** scores 76.6 on the weighted scale — meaningfully below both Claude 3.7 Sonnet and Claude Opus 4.5, despite carrying the same price tag as Claude 3.7 Sonnet ($3.00 per million input tokens). Its peak of 81.0 and floor of 74.0 reflect a model that underperforms its predecessor at every complexity level. Its 7.0-point robustness gap is the smallest of any model tested, but this reflects a consistently moderate performance profile rather than genuine resilience: its floor of 74.0 is lower than Claude 3.7 Sonnet's floor of 79.0, despite the smaller spread. For executives: at the same price as Claude 3.7 Sonnet, Claude 4 Sonnet delivers less accuracy. This finding is a direct challenge to the assumption that a newer model generation automatically means better performance on specialized tasks.
+**Note to reader:  this analysis is still in progress, and should be be considered draft.  More work is needed in this section.**
+
+The results of this evaluation offer a nuanced picture of how six leading LLMs perform on NIST SP 800-53 compliance reasoning tasks. Across nearly 800 labeled compliance scenarios, four complexity levels, two temperature configurations, and three distinct scoring lenses — unweighted accuracy, weighted risk-adjusted scoring, and performance curves — meaningful differences emerge in accuracy, failure modes, cost, and robustness.
+
+### Claude 3.7 Sonnet — Best Overall Performer
+
+Claude 3.7 Sonnet achieves the most consistent and well-calibrated performance across all complexity levels, with FP rates ranging from 3.0% to 5.5% and FN rates from 4.0% to 12.0%. Its defining characteristic is stability: unlike most models in this evaluation, its FP rate does not exhibit dramatic degradation as scenario complexity increases from C4 to C10. This stability is attributable to two reinforcing factors. First, the model has access to the compliance_calculator tool, which provides grounded arithmetic for the numerical threshold comparisons that appear throughout NIST SP 800-53 controls — comparisons such as "95 days vs. a 90-day requirement" that cannot be reliably resolved through approximate text-based reasoning alone. Second, Claude 3.7 Sonnet was Anthropic's first model to incorporate extended thinking capabilities, a training approach specifically designed to improve performance on multi-step analytical tasks requiring exhaustive verification rather than rapid pattern matching.[1] This architectural orientation is well-matched to the compliance evaluation task, which rewards systematic rule-by-rule checking over confident brevity.
+
+The question of why Claude 3.7 Sonnet outperforms the nominally newer Claude 4 Sonnet is a counterintuitive finding in this dataset and merits careful analysis. The answer lies in the distinction between general-purpose optimization and task-specific optimization. Research on large language model capability transfer has consistently demonstrated that newer models optimized for broad instruction-following efficiency can underperform older models that were specifically trained for deep multi-step reasoning on structured analytical tasks.[2] Claude 4 Sonnet was positioned as a general-purpose model emphasizing concise, efficient responses — a training objective that is misaligned with compliance evaluation, which requires exhaustive skepticism rather than confident brevity. Claude 3.7 Sonnet's extended thinking architecture, by contrast, is specifically designed to allocate additional reasoning budget to complex verification tasks, making it the better-suited model for this workload despite being an earlier release.
+
+The C8 FN spike (12.0% at T=0.0) is the primary anomaly for this model. At eight policies, the scenario context becomes sufficiently dense that the model occasionally misidentifies a compliant near-threshold value as a violation — the opposite of the dangerous error type, but operationally costly. Research on long-context attention in transformer architectures has shown that models exhibit degraded recall for information positioned in the middle of long input sequences, a phenomenon sometimes called the "lost in the middle" effect.[3] At C8, the compliance-relevant threshold value may be positioned in a context region where attention is less concentrated, leading to occasional misclassification of compliant values as violations. The partial recovery at C10 (FN drops to 10.7%) is consistent with the hypothesis that C10 violations are more prominent and unambiguous — they must be significant enough to stand out among ten policies — making them easier to detect correctly.
+
+### Claude Opus 4.5 — Strong at C4–C8, Significant C10 Cliff
+
+Claude Opus 4.5 is Anthropic's highest-capability model in this evaluation by parameter count and training investment, and its performance at C4 through C8 reflects this: it achieves the lowest FN rates of any model at these complexity levels (4.0–8.0%), demonstrating superior ability to correctly confirm compliant scenarios without generating false alarms. Its thorough reasoning outputs are notably longer and more systematic than those of other models, reflecting a training approach that prioritizes comprehensive verification over efficient summarization.[4]
+
+The C10 FN cliff — where FN rates rise from 4.0% at C8 to 17.9% at T=0.0 — is the most striking finding for this model and represents a well-documented failure mode in long-context LLM reasoning. The most plausible mechanism is a form of over-thoroughness under output token constraint: Opus 4.5's tendency to exhaustively verify each policy means it allocates more output tokens per policy than other models. With ten policies and a 4,096 maximum token budget, the model may exhaust its output budget before completing verification of all policies, causing it to render a verdict based on incomplete analysis. Alternatively, the model may exhibit what has been described in the RLHF literature as a form of majority-signal anchoring: having verified nine policies as compliant, it develops increasing confidence in a compliant verdict and becomes less sensitive to the single non-compliant policy remaining.[5] Either mechanism produces the same observable outcome — a dramatic increase in false alarms at maximum complexity — and both are consistent with the known behavior of models trained to be thorough under resource constraints.
+
+The practical implication is significant: for C10 workloads, Claude 3.7 Sonnet is the better choice despite being a smaller model. Opus 4.5 is optimal for most lower complexity workloads where its superior FN performance reduces operational overhead from false alarms.
+
+### Nova Premier — Best Amazon Model, Competitive with Anthropic
+
+Nova Premier achieves FP rates of 1.5% at C4 and 3.5% at C6 — the best FP performance of any model tested at these complexity levels. This is a remarkable result for a model operating without tool use access. The explanation could lie in Nova Premier's architectural positioning: it is Amazon's most capable model in the Nova family, designed for complex tasks requiring deep understanding of context, multistep planning, and precise execution across multiple data sources, with a one-million-token context window and benchmark scores of 87.4% on MMLU and 82.0% on Math500.[10] Its base reasoning capability is sufficiently strong to perform many numerical threshold comparisons inline without requiring the calculator tool, and its systematic policy-by-policy evaluation approach — evident in the judged output data — produces reliable violation detection at lower complexity levels.
+
+The C8 anomaly is the most analytically interesting finding in the dataset. Nova Premier's FP rate jumps from 3.5% at C6 to 10.0% at C8 — nearly tripling — before recovering to 2.6% at C10. This non-monotonic degradation pattern is observed across multiple models and is unlikely to be a coincidence. The most parsimonious explanation involves the interaction between scenario complexity and the absence of tool use. Research on attention mechanisms in transformer architectures has demonstrated that models exhibit non-linear degradation in recall accuracy as input length increases, with particular difficulty maintaining equal attention across all positions in long contexts.[3]
+
+The significance of Nova Premier's performance for Telos is that it achieves competitive results with Claude 3.7 Sonnet at C4–C6 without tool use access, at a lower cost. 
+
+### Claude 4 Sonnet — Underperformer Relative to Generation
+
+Claude 4 Sonnet exhibits the worst FN performance of any Anthropic model, with rates rising from 10.5% at C4 to 22.4% at C10. This pattern — consistently high false alarm rates that worsen with complexity — is the signature of a model that has developed a compliance-skeptical bias: when uncertain, it defaults to "non-compliant" rather than investing in deeper verification. While this posture keeps FP rates low (2.5–6.0%), it creates substantial operational overhead through excessive false alarms.
+
+The behavioral explanation is grounded in the known tradeoffs of RLHF-based training. Models trained with human feedback that rewards concise, confident responses tend to develop a preference for decisive verdicts over extended deliberation.[6] For compliance evaluation — a task that rewards exhaustive skepticism and systematic rule-checking — this optimization target is misaligned. Claude 4 Sonnet's judged outputs are notably shorter than those of Claude 3.7 Sonnet, suggesting the model is rendering verdicts after less thorough policy analysis. The C6 FN spike (15.5%) is particularly notable: the model's performance degrades substantially at just six policies, suggesting its effective context utilization for structured rule-checking tasks might be lower than that of its predecessor.
+
+The C10 FP recovery (2.6%) could be a consequence of the over-conservative posture: at maximum complexity, the model is so reluctant to call anything compliant that it almost never does, which incidentally keeps FP low while driving FN to its worst level. This is not a genuine improvement in violation detection — it is a degenerate strategy of near-universal non-compliance verdicts.
+
+### Nova 2 Lite — Poor Performance
+
+Nova 2 Lite exhibits a near-perfect "always compliant" bias that constitutes a systematic model failure mode rather than a performance characteristic. At C8, the model misses 27% of all non-compliant scenarios — more than one in four real violations go undetected. The 0.0% FNR at C8 and C10 confirms the model is not performing genuine policy analysis at these complexity levels; it is essentially biased toward outputting "compliant".
+
+The root cause is a combination of model capacity and inference architecture. Nova 2 Lite is Amazon's smallest, fastest, and least expensive Nova model designed for high-throughput, low-latency tasks rather than deep multi-document reasoning.[7] Research on the relationship between model scale and multi-step reasoning has consistently demonstrated that smaller models exhibit greater difficulty with tasks requiring the simultaneous tracking of multiple constraints across long input contexts.[8] With 4–10 dense policy documents in the input, Nova 2 Lite lacks the reasoning depth to identify subtle violations, particularly those involving numerical threshold comparisons.
+
+The apparent C8→C10 FP reduction (27% → 13.8%) is misleading. At C10, scenarios are sufficiently long and violations sufficiently prominent that the model occasionally identifies a violation by chance. This is noise, not signal — the near-zero FNR persists, confirming the model is not performing reliable violation detection.
+
+### Nova 2 Pro — Worst Overall Performer
+
+Nova 2 Pro's performance is paradoxically worse than both Nova 2 Lite and Nova Premier, exhibiting the worst overall error profile in the evaluation. Understanding why requires examining the specific engineering decision that shaped its inference path.
+
+The bidirectional error pattern at C6–C8 — simultaneously elevated FP and catastrophic FN — is the worst possible outcome for a compliance workload. The model neither reliably detects violations nor reliably confirms compliance. The C10 FP recovery (2.0%) mirrors Claude 4 Sonnet's degenerate strategy: at maximum complexity, the model becomes so conservative that it almost never calls anything compliant, which incidentally reduces missed violations while driving false alarms to approximately 25%.
 
 ### Design Principles for Production Compliance Workflows
 
@@ -599,7 +594,7 @@ This evaluation surfaces principles that should inform how teams architect AI-as
 
 ### Looking Ahead
 
-This framework is designed to be evolve alongside the models it evaluates, and the pipeline can be extended to incorporate additional entrants without modification to the core evaluation architecture.  The core finding, however, is that rigorous, task-specific evaluation is the only reliable basis for model selection in compliance-critical AI applications.  The differences between models in this evaluation — in accuracy, in failure modes, in cost, and in how performance degrades with complexity — are large enough to have real operational and financial consequences. The framework described in this post provides a reproducible, extensible methodology for making those differences visible.
+This framework is designed to be evolve alongside the models it evaluates, and the pipeline can be extended to incorporate additional entrants without modification to the core evaluation architecture.  The core finding, however, is that rigorous, task-specific evaluation is the only reliable basis for model selection in compliance-critical AI applications.  The differences between models in this evaluation — in accuracy, in failure modes, in cost, and in how performance degrades with complexity — are large enough to have real operational and financial consequences. The framework described in this post provides a reproducible, extensible methodology for making those differences visible.  As discussed above, understanding tool use with Nova/Nova 2 models is a takeaway item.
 
 ---
 
