@@ -451,23 +451,6 @@ Claude models were tested with tool use enabled - specifically a calculator tool
 
 Unweighted scores are calculated as 100 - ((FP + FN) / total * 100), treating false positives and false negatives equally. This provides a balanced view of overall accuracy where both types of errors have equal impact on the final score.
 
-The full ranked results across all model and temperature combinations are:
-
-| Model & Temp | C4 | C6 | C8 | C10 | Average |
-|---|---|---|---|---|---|
-| **claude 3 7 sonnet** (T=0.1) | 89.5% | 92.0% | 84.5% | 85.7% | 87.9% |
-| **claude opus 4 5** (T=0.0) | 91.0% | 89.5% | 91.0% | 78.1% | 87.4% |
-| **claude 3 7 sonnet** (T=0.0) | 88.5% | 91.5% | 83.0% | 85.7% | 87.2% |
-| **claude opus 4 5** (T=0.1) | 90.0% | 88.5% | 88.5% | 80.6% | 86.9% |
-| **nova premier** (T=0.0) | 88.5% | 87.5% | 80.0% | 84.7% | 85.2% |
-| **nova premier** (T=0.1) | 87.0% | 87.0% | 81.0% | 83.7% | 84.7% |
-| **nova 2 lite** (T=0.0) | 86.5% | 84.0% | 73.0% | 86.2% | 82.4% |
-| **nova 2 lite** (T=0.1) | 87.0% | 83.5% | 73.0% | 86.2% | 82.4% |
-| **claude 4 sonnet** (T=0.1) | 84.5% | 80.0% | 82.5% | 76.5% | 80.9% |
-| **claude 4 sonnet** (T=0.0) | 87.0% | 79.0% | 79.0% | 75.0% | 80.0% |
-| **nova 2 pro** (T=0.0) | 78.5% | 68.0% | 63.5% | 73.5% | 70.9% |
-| **nova 2 pro** (T=0.1) | 78.0% | 70.0% | 62.5% | 71.9% | 70.6% |
-
 ---
 
 ## Weighted Model Performance
@@ -479,23 +462,6 @@ The unweighted analysis treats all errors equally. But in a real compliance work
 To reflect this asymmetry, the weighted scoring formula penalizes false positives at **2× the rate of false negatives**: `Weighted Score = 100 - ((2 × FP + FN) / Total × 100)`; incorrectly flagging violations as compliant scenarios is considered risky and therefore costlier than incorrectly flagging compliant scenarios as non-compliant.
 
 The results under this scoring scheme reveal a somewhat different picture without affecting the overall unweighted leader rankings.  Claude 4 Sonnet and Nova 2 Lite do switch places with weighting applied.  Additionally, the worst performers are penalized more due to having a proportionately higher number of false positives.
-
-The full ranked results across all model and temperature combinations are:
-
-| Model & Temp | C4 | C6 | C8 | C10 | Average |
-|---|---|---|---|---|---|
-| **claude 3 7 sonnet** (T=0.1) | 86.5% | 88.0% | 79.0% | 81.6% | 83.8% |
-| **claude 3 7 sonnet** (T=0.0) | 85.0% | 87.5% | 78.0% | 82.1% | 83.2% |
-| **claude opus 4 5** (T=0.0) | 88.5% | 83.0% | 86.0% | 74.0% | 82.9% |
-| **claude opus 4 5** (T=0.1) | 87.0% | 82.0% | 83.0% | 77.0% | 82.3% |
-| **nova premier** (T=0.0) | 87.0% | 84.0% | 70.0% | 82.1% | 80.8% |
-| **nova premier** (T=0.1) | 85.5% | 83.5% | 71.0% | 80.6% | 80.2% |
-| **claude 4 sonnet** (T=0.1) | 81.0% | 75.0% | 76.5% | 74.0% | 76.6% |
-| **claude 4 sonnet** (T=0.0) | 84.5% | 73.5% | 73.0% | 72.4% | 75.9% |
-| **nova 2 lite** (T=0.1) | 75.5% | 68.5% | 46.0% | 72.4% | 65.6% |
-| **nova 2 lite** (T=0.0) | 74.0% | 69.0% | 46.0% | 72.4% | 65.4% |
-| **nova 2 pro** (T=0.0) | 73.5% | 63.5% | 53.0% | 71.4% | 65.4% |
-| **nova 2 pro** (T=0.1) | 72.0% | 66.5% | 51.0% | 69.9% | 64.8% |
 
 ---
 
