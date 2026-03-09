@@ -427,23 +427,6 @@ For this project:
  - False negative: the judged scenario is compliant, but the model incorrectly judged it as non-compliant.
 
 ---
-## Important Note - Tool Use
-
-The Amazon Bedrock Converse API is a unified inference interface that provides a consistent way to interact with supported foundation models, and it includes built-in support for tool use (also called function calling), allowing models to request the execution of external functions or APIs during a conversation. Tool use is the ability for a model to recognize when it needs additional information or capabilities beyond its training data, declare a structured call to a predefined tool (such as a calculator, database lookup, or web search), and incorporate the tool's returned result into its final response.
-
-Claude models were tested with tool use enabled - specifically a calculator tool to help the LLM with numerical and unit comparision (e.g. to indicate that 20 terabytes is smaller than 2 petabytes) and also a json tool to enforce that results were returned in a valid json format.  Claude tool use improved results significantly.  The calculator and json tools were also tried with the Nova and Nova 2 models.  However, performance degraded significantly with Nova Premier, degraded with Nova 2 Lite, and increased slightly with Nova 2 Pro.  (See the table below, which compares average weighted scores by model and temperature for tooluse versus no tool use enabled.) This was an unexpected result and is being investigated; Nova/Nova 2 results presented in this analysis are those where tool use was not enabled.
-
-
-|Model/Temperature|No Tool Use| With Tool Use|
-|--|--|--|
-|Nova Premier, Temp 0.0 |80.8 |67.2|
-|Nova Premier, Temp 0.1 |80.2 |68.9|
-|Nova 2 Lite, Temp 0.0 | 65.4 |63.3|
-|Nova 2 Lite, Temp 0.1 |65.6 | 62.7|
-|Nova 2 Pro, Temp 0.0 |65.4 |66.1|
-|Nova 2 Pro, Temp 0.1 |64.8 |65.7|
-
----
 
 ## Unweighted Model Performance
 
@@ -604,7 +587,6 @@ This framework is designed to be evolve alongside the models it evaluates, and t
 ---
 
 ## Appendix: Confusion Matrix Summary
-
 | Model & Temp | C4-FP% | C4-FN% | C6-FP% | C6-FN% | C8-FP% | C8-FN% | C10-FP% | C10-FN% |
 |---|---|---|---|---|---|---|---|---|
 | **claude 3 7 sonnet** (T=0.0) | 3.5% | 8.0% | 4.0% | 4.5% | 5.0% | 12.0% | 3.6% | 10.7% |
@@ -622,6 +604,7 @@ This framework is designed to be evolve alongside the models it evaluates, and t
 
 **Legend:** C=Complexity, FP%=False Positive %, FN%=False Negative %
 Worst 25% in False Postives are **bolded**
+
 
 ---
 
