@@ -10,13 +10,13 @@ Goals:
 
  - Test LLM accuracy on complex regulatory compliance scenarios
 
- - Compare model performance across different LLMs (Claude variants, Nova Premier, Nova 2 Lite)
+ - Compare model performance across different LLMs.  **Specifically, how do three generations of top Anthropic frontier models on Bedrock perform?  And how do the latest AWS models stack up against these compliance workloads?**
 
- - Support cost-effectiveness by tracking token usage for price/performance analysis
+ - Assess scenario complexity impact by varying the number of policies referenced (4, 6, 8, 10 policies per scenario).
 
- - Evaluate reasoning quality through detailed explanations from each model
+ - Evaluate reasoning quality through detailed explanations from each model.
 
- - Assess scenario complexity impact by varying the number of policies referenced (4, 6, 8, 10 policies per scenario)
+ - Support cost-effectiveness by tracking token usage for a later, more detailed price/performance analysis.
 
 
 ## Pipeline Flow
@@ -431,7 +431,7 @@ For this project:
 
 The Amazon Bedrock Converse API is a unified inference interface that provides a consistent way to interact with supported foundation models, and it includes built-in support for tool use (also called function calling), allowing models to request the execution of external functions or APIs during a conversation. Tool use is the ability for a model to recognize when it needs additional information or capabilities beyond its training data, declare a structured call to a predefined tool (such as a calculator, database lookup, or web search), and incorporate the tool's returned result into its final response.
 
-Claude models were tested with tool use enabled - specifically a calculator tool to help the LLM with numerical and unit comparision (e.g. to indicate that 20 terabytes is smaller than 2 petabytes) and also a json tool to enforce that results were returned in a valid json format.  Claude tool use improved results significantly.  The calculator and json tools were also tried with the Nova and Nova 2 models.  However, performance degraded significantly with Nova Premier, degraded with Nova 2 Lite, and increased slightly with Nova 2 Pro.  (See the table below, which compares average weighted scores by model and temperature for tooluse versus no tool use enabled.) This was an unexpected result and is being investigated; Nova/Nova 2 results presented in this analysis are those where tool use was not enabled.
+Claude models were tested with tool use enabled - specifically a calculator tool to help the LLM with numerical and unit comparision (e.g. to indicate that 20 terabytes is smaller than 2 petabytes) and also a json tool to enforce that results were returned in a valid json format.  Claude tool use improved results significantly.  The calculator and json tools were also tried with the Nova and Nova 2 models.  However, performance degraded significantly with Nova Premier, degraded with Nova 2 Lite, and increased slightly with Nova 2 Pro.  (See the table below, which compares average weighted scores by model and temperature for tool use versus no tool use enabled.) This was an unexpected result and is being investigated; Nova/Nova 2 results presented in this analysis are those where tool use was not enabled.
 
 
 |Model/Temperature|No Tool Use| With Tool Use|
@@ -498,8 +498,6 @@ The five columns in the table each tell a different part of the story:
 
 ## Conclusion: Choosing the Right LLM for NIST Compliance Automation
 
-**Note to reader:  this analysis is still in progress, and should be be considered draft.  More work is needed in this section.**
-
 The results of this evaluation offer a nuanced picture of how six leading LLMs perform on NIST SP 800-53 compliance reasoning tasks. Across nearly 800 labeled compliance scenarios, four complexity levels, two temperature configurations, and three distinct scoring lenses — unweighted accuracy, weighted risk-adjusted scoring, and performance curves — meaningful differences emerge in accuracy, failure modes, cost, and robustness.
 
 ### Claude 3.7 Sonnet — Best Overall Performer
@@ -560,7 +558,17 @@ This evaluation surfaces principles that should inform how teams architect AI-as
 
 ### Looking Ahead
 
-This framework is designed to be evolve alongside the models it evaluates, and the pipeline can be extended to incorporate additional entrants without modification to the core evaluation architecture.  The core finding, however, is that rigorous, task-specific evaluation is the only reliable basis for model selection in compliance-critical AI applications.  The differences between models in this evaluation — in accuracy, in failure modes, in cost, and in how performance degrades with complexity — are large enough to have real operational and financial consequences. The framework described in this post provides a reproducible, extensible methodology for making those differences visible.  As discussed above, understanding tool use with Nova/Nova 2 models is a takeaway item.
+This framework is designed to be evolve alongside the models it evaluates, and the pipeline can be extended to incorporate additional entrants without modification to the core evaluation architecture.  The core finding, however, is that rigorous, task-specific evaluation is the only reliable basis for model selection in compliance-critical AI applications.  The differences between models in this evaluation — in accuracy, in failure modes, in cost, and in how performance degrades with complexity — have real operational and financial consequences.
+
+This framework provides a customizable, extensible methodology that can easily be extended to additional models and framework evaluations.
+
+### Outstanding Questions for Analysis
+
+ - Why did Nova Premier - a promising performer - have results that declined dramatically with calculator and json tool use? 
+ - Why did Nova 2 Lite and Pro performance not improve with calculator and json tool use?
+ - 
+
+As discussed above, understanding tool use with Nova/Nova 2 models is a takeaway item.
 
 ---
 
